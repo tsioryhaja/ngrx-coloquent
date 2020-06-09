@@ -1,6 +1,14 @@
 {
   "name": "ngrx-coloquent",
   "version": "0.0.1",
+  "homepage": "https://github.com/tsioryhaja/ngrx-coloquent#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tsioryhaja/ngrx-coloquent.git"
+  },
+  "bugs": {
+    "url": "https://github.com/tsioryhaja/ngrx-coloquent/issues"
+  },
   "peerDependencies": {
     "@ngrx/effects": "^9.2.0",
     "@ngrx/entity": "^9.2.0",
