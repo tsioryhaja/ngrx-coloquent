@@ -1,0 +1,14 @@
+{
+  "name": "ngrx-coloquent",
+  "version": "0.0.1",
+  "peerDependencies": {
+    "@ngrx/effects": "^9.2.0",
+    "@ngrx/entity": "^9.2.0",
+    "@ngrx/store": "^9.2.0",
+    "@herlinus/coloquent": "^2.2.0",
+    "rxjs": "~6.5.4"
+  },
+  "dependencies": {
+    "tslib": "^1.10.0"
+  }
+}
