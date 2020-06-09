@@ -16,4 +16,13 @@ export class HomeComponent implements OnInit {
     this.personService.getOne$(500153)
   }
 
+  sendUpdate() {
+    this.personService.selectOne(500153).subscribe(
+      (value) => {
+        value.familyName = "TOTO";
+        this.personService.save$(value)
+      }
+    )
+  }
+
 }

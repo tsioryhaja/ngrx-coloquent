@@ -37,7 +37,7 @@ export function entityEffectsActions(jsonApiType: string): EntityActions {
         getOne: createAction('[' + jsonApiType + '/MODEL] Get One', props<{ queryId: number | string, variableName?: string }>()),
         loadOne: createAction('[' + jsonApiType + '/MODEL] Load One', props<{ queryId: number | string, variableName?: string }>()),
         loadMany: createAction('[' + jsonApiType + '/MODEL] Load Many', props<{ query: Builder, page: number, variableName?: string }>()),
-        save: createAction('[' + jsonApiType + '/MODEL] Load Many', props<{ data: AppModel }>())
+        save: createAction('[' + jsonApiType + '/MODEL] Save One', props<{ data: AppModel }>())
     }
     return actions
 }

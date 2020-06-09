@@ -10,6 +10,10 @@ export class Person extends Identity {
         return this.getAttribute('family_name')
     }
 
+    set familyName (value) {
+        this.setAttribute('family_name', value)
+    }
+
     get givenName () {
         return this.getAttribute('givenName')
     }

@@ -9,6 +9,7 @@ import { PersonEffects } from './ngrx/person.effects';
 import { HomeComponent } from './home/home.component';
 import { StoreModule } from '@ngrx/store';
 import { EffectsModule } from '@ngrx/effects';
+import { CollaboratorEffects } from './ngrx/collaborator.effects';
 
 @NgModule({
   declarations: [
@@ -22,7 +23,7 @@ import { EffectsModule } from '@ngrx/effects';
       Identity: identityReducer,
       variables: variableReducer()
     }, storeConfig),
-    EffectsModule.forRoot([PersonEffects])
+    EffectsModule.forRoot([PersonEffects, CollaboratorEffects])
   ],
   providers: [],
   bootstrap: [AppComponent]
