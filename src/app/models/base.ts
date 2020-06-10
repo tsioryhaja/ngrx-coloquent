@@ -6,7 +6,7 @@ export abstract class Model extends Model_ {
     protected static paginationPageSizeParamName: string = 'page[size]'
 
     getJsonApiBaseUrl(): string {
-        return 'http://192.168.47.2:7500/api/'
+        return 'http://192.168.56.102:7500/api/'
     }
 }
 
@@ -16,6 +16,6 @@ export abstract class PolymorphicModel extends PolymorphicModel_ {
     protected static paginationPageSizeParamName: string = 'page[size]'
 
     getJsonApiBaseUrl(): string {
-        return 'http://192.168.47.2:7500/api/'
+        return 'http://192.168.56.102:7500/api/'
     }
 }

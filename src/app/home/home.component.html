@@ -1,3 +1,6 @@
 {{ (collaborator | async)?.familyName }}
 
+{{ (errors | async) }}
+
 <button (click)="sendUpdate()">Update</button>
+<button (click)="createPerson()">Create</button>

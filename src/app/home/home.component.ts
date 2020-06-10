@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { PersonService } from '../ngrx/person.service';
 import { Observable } from 'rxjs';
+import { Store } from '@ngrx/store';
+import { Person } from '../models/person';
 
 @Component({
   selector: 'app-home',
@@ -9,8 +11,9 @@ import { Observable } from 'rxjs';
 })
 export class HomeComponent implements OnInit {
   collaborator: Observable<any> = this.personService.selectOne(500153)
+  errors: Observable<any> = this.personService.getVariable$('errors')
 
-  constructor(private personService: PersonService) { }
+  constructor(private personService: PersonService, private store: Store<any>) { }
 
   ngOnInit(): void {
     this.personService.getOne$(500153)
@@ -23,6 +26,13 @@ export class HomeComponent implements OnInit {
         this.personService.save$(value)
       }
     )
+  }
+
+  createPerson() {
+    let d = new Person()
+    d.familyName = "testt"
+    d.clientId = 500000
+    this.personService.save$(d)
   }
 
 }

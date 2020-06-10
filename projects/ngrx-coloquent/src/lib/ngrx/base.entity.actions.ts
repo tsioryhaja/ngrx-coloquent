@@ -13,7 +13,8 @@ export interface ReducerActions {
     setOne: any,
     setMany: any,
     removeOne: any,
-    setServerState: any
+    setServerState: any,
+    setErrors: any
 }
 
 export interface MapEntityAction {
@@ -47,7 +48,8 @@ export function entityReducerActions(jsonApiType: string): ReducerActions {
         setOne: createAction('[' + jsonApiType + '/API] Set One', props<{ payload: AppModel }>()),
         setMany: createAction('[' + jsonApiType + '/API] Set Many', props<{ payload: AppModel[] }>()),
         removeOne: createAction('[' + jsonApiType + '/API] Remove One', props<{ payload: AppModel }>()),
-        setServerState: createAction('[' + jsonApiType + '/API] Remove', props<{ state: ServerStates, errors?: any }>())
+        setServerState: createAction('[' + jsonApiType + '/API] Set State', props<{ entity: string, state: ServerStates, errors?: any }>()),
+        setErrors: createAction('[' + jsonApiType + '/ANY] Set Error', props<{ errors: any }>())
     }
     return actions
 }
@@ -102,4 +104,5 @@ export class ActionsContainer {
         ActionsContainer.setReducerAction(jsonApiName, reducerActions)
         ActionsContainer.setEffectAction(jsonApiName, effectActions)
     }
+    
 }

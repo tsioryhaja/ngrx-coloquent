@@ -117,6 +117,10 @@ export abstract class BaseJsonAPIService<T extends AppModel> {
                         observer.next(data)
                         observer.complete()
                     }
+                ).catch(
+                    (reason: any) => {
+                        observer.error(reason)
+                    }
                 )
             }
         )
@@ -124,5 +128,14 @@ export abstract class BaseJsonAPIService<T extends AppModel> {
 
     save$(data: T) {
         return this.store.dispatch(this.actions.save({ data: data }))
+    }
+
+    setEntityState(data: T, state, errors?) {
+        let entity = data.getApiId() ? data.getApiId() : "new" 
+        return this.collectionActions.setServerState({ entity, state, errors })
+    }
+
+    setError(errors) {
+        
     }
 }
