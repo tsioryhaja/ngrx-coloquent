@@ -29,7 +29,7 @@ export class BaseQuery {
         return this.query
     }
     get(parameter: GetQuery) {
-        if (parameter.variableName) this.service.loadMany$(this.query, parameter.page, parameter.variableName)
+        if (parameter.variableName) this.service.loadMany$(this.query, parameter.page, { variableName: parameter.variableName })
         else this.service.loadMany$(this.query, parameter.page)
     }
 }

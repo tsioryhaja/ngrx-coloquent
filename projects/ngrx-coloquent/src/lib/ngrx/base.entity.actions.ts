@@ -7,6 +7,8 @@ export interface EntityActions {
     loadOne: any
     loadMany: any
     save: any
+    loadRelation: any
+    executeCallback: any
 }
 
 export interface ReducerActions {
@@ -38,7 +40,9 @@ export function entityEffectsActions(jsonApiType: string): EntityActions {
         getOne: createAction('[' + jsonApiType + '/MODEL] Get One', props<{ queryId: number | string, variableName?: string }>()),
         loadOne: createAction('[' + jsonApiType + '/MODEL] Load One', props<{ queryId: number | string, variableName?: string }>()),
         loadMany: createAction('[' + jsonApiType + '/MODEL] Load Many', props<{ query: Builder, page: number, variableName?: string }>()),
-        save: createAction('[' + jsonApiType + '/MODEL] Save One', props<{ data: AppModel }>())
+        save: createAction('[' + jsonApiType + '/MODEL] Save One', props<{ data: AppModel }>()),
+        loadRelation: createAction('[' + jsonApiType + '/MODEL] Save One', props<{ data: AppModel, relationName: string, variableName?: string }>()),
+        executeCallback: createAction('[' + jsonApiType + '/EFFECTS] Execute Action', props<{ data: any, callback: Function }>())
     }
     return actions
 }

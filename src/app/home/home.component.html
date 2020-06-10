@@ -2,5 +2,8 @@
 
 {{ (errors | async) }}
 
+{{ (collaborator | async)?.getEmails() }}
+
 <button (click)="sendUpdate()">Update</button>
 <button (click)="createPerson()">Create</button>
+<button (click)="getEmails()">Get emails</button>

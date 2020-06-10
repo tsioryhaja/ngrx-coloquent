@@ -2,10 +2,16 @@ import { Model as AppModel } from '@herlinus/coloquent';
 import { EntityActions, ReducerActions, ActionsContainer } from './base.entity.actions';
 import { Injectable } from '@angular/core';
 import { Store } from '@ngrx/store';
-import { Observable } from 'rxjs';
+import { Observable, empty, EMPTY } from 'rxjs';
 import { Builder } from '@herlinus/coloquent';
 import { BaseQuery } from './base.entity.query';
 import { Data } from '@angular/router';
+
+export interface EntityActionParameters {
+    variableName?: string
+    onSuccess?: Function
+    onFailure?: Function
+}
 
 @Injectable({
     providedIn: 'root'
@@ -42,21 +48,24 @@ export abstract class BaseJsonAPIService<T extends AppModel> {
     constructor(protected store: Store<any>) {
     }
 
-    getOne$(id: number | string, variableName?: string) {
+    getOne$(id: number | string, parameters: EntityActionParameters = {}) {
         let data = { queryId: id }
-        if (variableName) data['variableName'] = variableName
+        if (parameters.variableName) data['variableName'] = parameters.variableName
+        data['parameters'] = parameters
         return this.store.dispatch(this.actions.getOne(data))
     }
 
-    loadOne$(id: number | string, variableName?: string) {
+    loadOne$(id: number | string, parameters: EntityActionParameters = {}) {
         let data = { queryId: id }
-        if (variableName) data['variableName'] = variableName
+        if (parameters.variableName) data['variableName'] = parameters.variableName
+        data['parameters'] = parameters
         return this.store.dispatch(this.actions.loadOne(data))
     }
 
-    loadMany$(query: Builder, page?: number, variableName?: string) {
+    loadMany$(query: Builder, page?: number, parameters: EntityActionParameters = {}) {
         let data = { query: query, page: page }
-        if (variableName) data['variableName'] = variableName
+        if (parameters.variableName) data['variableName'] = parameters.variableName
+        data['parameters'] = parameters
         return this.store.dispatch(this.actions.loadMany(data))
     }
 
@@ -126,8 +135,10 @@ export abstract class BaseJsonAPIService<T extends AppModel> {
         )
     }
 
-    save$(data: T) {
-        return this.store.dispatch(this.actions.save({ data: data }))
+    save$(data: T, parameters: EntityActionParameters = {}) {
+        let _data = { data: data }
+        _data['parameters'] = parameters
+        return this.store.dispatch(this.actions.save(_data))
     }
 
     setEntityState(data: T, state, errors?) {
@@ -138,4 +149,31 @@ export abstract class BaseJsonAPIService<T extends AppModel> {
     setError(errors) {
         
     }
+
+    returnEmpty(): Observable<any> {
+        return EMPTY
+    }
+
+    loadRelation(data: T, relationName: string) {
+        return Observable.create(
+            (observer) => {
+                data[relationName]().get().then(
+                    (value) => {
+                        observer.next(value)
+                        observer.complete()
+                    }
+                ).catch(
+                    (err) => {
+                        observer.error(err)
+                        observer.complete()
+                    }
+                )
+            }
+        )
+    }
+
+    executeCallback$(data: any) {
+        this.store.dispatch(this.actions.executeCallback(data))
+    }
+
 }
