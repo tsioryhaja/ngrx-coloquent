@@ -17,7 +17,14 @@ export class HomeComponent implements OnInit {
 
   ngOnInit(): void {
     this.personService.getOne$(500153, {
-      variableName: 'selectedCollaborator'
+      variableName: 'selectedCollaborator',
+      onSuccess: (data) => {
+        this.personService.loadRelation$(data, 'emails', {
+          onSuccess: (val) => {
+            data.setRelation(val.getData())
+          }
+        })
+      }
     })
   }
 
@@ -40,13 +47,7 @@ export class HomeComponent implements OnInit {
   getEmails() {
     this.personService.selectOne(500153).subscribe(
       (value: Person) => {
-        value['emails']().get().then(
-          (_value) => {
-            console.log(_value.getData())
-            value.setRelation('emails', _value.getData())
-            console.log(value.getEmails())
-          }
-        )
+        this.personService.loadRelation(value, 'emails')
       }
     )
   }

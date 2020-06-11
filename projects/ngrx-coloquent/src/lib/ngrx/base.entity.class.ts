@@ -157,6 +157,7 @@ export abstract class BaseJsonAPIService<T extends AppModel> {
     loadRelation(data: T, relationName: string) {
         return Observable.create(
             (observer) => {
+                let d = data[relationName]()
                 data[relationName]().get().then(
                     (value) => {
                         observer.next(value)
@@ -170,6 +171,13 @@ export abstract class BaseJsonAPIService<T extends AppModel> {
                 )
             }
         )
+    }
+
+    loadRelation$(data: T, relationName, parameters: EntityActionParameters = {}) {
+        let _data = { data: data, relationName: relationName }
+        if (parameters.variableName) _data['variableName'] = parameters.variableName
+        _data['parameters'] = parameters
+        return this.store.dispatch(this.actions.loadRelation(_data))
     }
 
     executeCallback$(data: any) {

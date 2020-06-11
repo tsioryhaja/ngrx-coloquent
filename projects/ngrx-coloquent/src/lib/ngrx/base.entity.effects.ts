@@ -2,10 +2,11 @@ import { Injectable, Inject } from "@angular/core";
 import { Actions, ofType, createEffect } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
 import { BaseJsonAPIService } from './base.entity.class';
-import { Model as AppModel } from '@herlinus/coloquent';
+import { Model as AppModel, PluralResponse } from '@herlinus/coloquent';
 import { exhaustMap, map, catchError } from 'rxjs/operators';
 import { EMPTY, Observable } from 'rxjs';
 import { isArray } from 'util';
+import { ActionsContainer } from './base.entity.actions';
 
 @Injectable()
 export abstract class BaseEffects {
@@ -20,9 +21,15 @@ export abstract class BaseEffects {
     }
 
     executeParameter(action, data, isSuccess) {
-        if (!action.parameter) return
-        let callback = isSuccess ? action.parameter.onSuccess : action.parameter.onFailure
+        if (!action.parameters) return
+        let callback = isSuccess ? action.parameters.onSuccess : action.parameters.onFailure
         if (callback) this.service.executeCallback$({ data: data, callback: callback })
+    }
+
+    setRelationToStore(data: any) {
+        let apiType = data.getJsonApiBaseType()
+        let action = ActionsContainer.getReducerAction(apiType).setOne(data)
+        this.store.dispatch(action)
     }
 
     getOne$ = createEffect(
@@ -34,6 +41,7 @@ export abstract class BaseEffects {
                         return this.store.select(state => state[this.service.getCollection()].entities[action.queryId]).pipe(
                             map(
                                 (value: any) => {
+                                    PluralResponse
                                     if(!value) {
                                         return this.service.actions.loadOne({ queryId: action.queryId })
                                     }
@@ -133,24 +141,33 @@ export abstract class BaseEffects {
         }
     )
 
-    /*loadRelation$ = createEffect(
+    loadRelation$ = createEffect(
         () => {
             return this.actions$.pipe(
                 ofType(this.service.actions.loadRelation),
                 exhaustMap(
                     (action: any) => {
-                        return this.service.loadRelation(action.data, action.relationName).pipe(
+                        this.service.loadRelation(action.data, action.relationName).pipe(
                             map(
                                 (value: any) => {
                                     let data = value.getData()
-                                    if (!isArray(data)) data = [data]
+                                    if(isArray(data)) {
+                                        this.setRelationToStore(data)
+                                    } else {
+                                        for (let element of data) {
+                                            this.setRelationToStore(element)
+                                        }
+                                    }
+                                    this.executeParameter(action, value, true)
                                 }
-                            )
-                        )
+                            ),
+                            catchError(this.sendError('errors', action))
+                        ).subscribe()
+                        return this.service.returnEmpty()
                     }
                 )
             )
         }
-    )*/
+    )
     
 }
