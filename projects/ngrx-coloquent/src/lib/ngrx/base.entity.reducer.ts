@@ -11,13 +11,21 @@ export function entityReducer(adapter: EntityAdapter<AppModel>, jsonApiType: str
         on(
             actions.setOne,
             (state, { payload }) => {
-                return adapter.setOne(payload, state)
+                return adapter.upsertOne(payload, state)
             }
         ),
         on(
             actions.setMany,
             (state, { payload }) => {
-                return adapter.setAll(payload, state)
+                return adapter.upsertMany(payload, state)
+            }
+        ),
+        on(
+            actions.removeOne,
+            (state, { payload }) => {
+                let id = payload.getApiId()
+                payload.destroy()
+                return adapter.removeOne(id, state)
             }
         )
     )

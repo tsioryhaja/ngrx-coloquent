@@ -184,4 +184,26 @@ export abstract class BaseJsonAPIService<T extends AppModel> {
         this.store.dispatch(this.actions.executeCallback(data))
     }
 
+    deleteOne(data:T): Observable<any> {
+        return Observable.create(
+            (observer) => {
+                data.delete().then(
+                    (value) => {
+                        observer.next({ data, value })
+                        observer.complete()
+                    }
+                ).catch(
+                    (reason) => {
+                        observer.error(reason)
+                        observer.complete()
+                    }
+                )
+            }
+        )
+    }
+
+    deleteOne$(data:T, parameters: EntityActionParameters = {}) {
+        return this.store.dispatch(this.actions.deleteOne({ data: data, parameters: parameters }))
+    }
+
 }

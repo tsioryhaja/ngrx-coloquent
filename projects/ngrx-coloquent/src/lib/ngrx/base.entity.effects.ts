@@ -41,7 +41,6 @@ export abstract class BaseEffects {
                         return this.store.select(state => state[this.service.getCollection()].entities[action.queryId]).pipe(
                             map(
                                 (value: any) => {
-                                    PluralResponse
                                     if(!value) {
                                         return this.service.actions.loadOne({ queryId: action.queryId })
                                     }
@@ -169,5 +168,25 @@ export abstract class BaseEffects {
             )
         }
     )
-    
+
+    deleteOne$ = createEffect(
+        () => {
+            return this.actions$.pipe(
+                ofType(this.service.actions.deleteOne),
+                exhaustMap(
+                    (action: any) => {
+                        return this.service.deleteOne(action.data).pipe(
+                            map(
+                                (value) => {
+                                    this.executeParameter(action, value.value, true)
+                                    return this.service.collectionActions.removeOne({ payload: action.data })
+                                }
+                            ),
+                            catchError(this.sendError('errors', action))
+                        )
+                    } 
+                )
+            )
+        }
+    )
 }
