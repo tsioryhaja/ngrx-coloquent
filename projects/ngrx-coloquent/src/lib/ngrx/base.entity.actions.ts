@@ -1,6 +1,8 @@
 import { Model as AppModel } from '@herlinus/coloquent';
-import { createAction, props, Action } from '@ngrx/store';
+import { createAction, props, Action, createReducer, on } from '@ngrx/store';
 import { Builder } from '@herlinus/coloquent';
+import { EntityAdapter, createEntityAdapter } from '@ngrx/entity';
+import { ProxyOneData, ProxyManyData } from './proxy';
 
 export interface EntityActions {
     getOne: any
@@ -30,6 +32,8 @@ export interface MapReducerAction {
 
 export interface VariableActions {
     set: any
+    proxyOne: any
+    proxyMany: any
 }
 
 export enum ServerStates {
@@ -60,7 +64,15 @@ export function entityReducerActions(jsonApiType: string): ReducerActions {
     return actions
 }
 
+export const variableActions = {
+    set: createAction('[Variable/DATA] Set',props<{ payload: any, variableName: string }>()),
+    proxyOne: createAction('[Variable/DATA] Proxy One', props<{ payload: any, variableName: string }>()),
+    proxyMany: createAction('[Variable/DATA] Proxy Many', props<{ payload: any, variableName: string }>())
+}
+
 export class ActionsContainer {
+    static effects: any[] = []
+    private static services = {}
     private static actions: {
         effects: MapEntityAction,
         reducer: MapReducerAction,
@@ -68,9 +80,7 @@ export class ActionsContainer {
     } = {
         effects: {},
         reducer: {},
-        variable: {
-            set: createAction('[Variable/DATA] Set',props<{ payload: any, variableName: string }>())
-        }
+        variable: variableActions
     }
 
     static setEffectAction(jsonApiName: string, actions: EntityActions) {
@@ -110,5 +120,12 @@ export class ActionsContainer {
         ActionsContainer.setReducerAction(jsonApiName, reducerActions)
         ActionsContainer.setEffectAction(jsonApiName, effectActions)
     }
-    
+
+    static effect(target: any) {
+        ActionsContainer.effects.push(target)
+    }
+
+    static getEffects() {
+        return ActionsContainer.effects
+    }
 }

@@ -1,6 +1,6 @@
 import { Injectable } from "@angular/core";
-import { BaseJsonAPIService } from 'ngrx-coloquent';
 import { Email } from '../models/emails';
+import { BaseJsonAPIService } from 'projects/ngrx-coloquent/src/public-api';
 
 @Injectable({
     providedIn: 'root'

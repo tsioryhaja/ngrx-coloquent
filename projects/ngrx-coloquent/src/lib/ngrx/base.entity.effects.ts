@@ -38,7 +38,11 @@ export abstract class BaseEffects {
                 ofType(this.service.actions.getOne),
                 exhaustMap(
                     (action) => {
-                        return this.store.select(state => state[this.service.getCollection()].entities[action.queryId]).pipe(
+                        return this.store.select(state => {
+                            console.log(this.service.getCollection())
+                            console.log(state)
+                            return state[this.service.getCollection()].entities[action.queryId]
+                        }).pipe(
                             map(
                                 (value: any) => {
                                     if(!value) {
@@ -46,7 +50,7 @@ export abstract class BaseEffects {
                                     }
                                     else {
                                         this.executeParameter(action, value, true)
-                                        if (action.variableName) this.service.setVariable$(action.variableName, value)
+                                        if (action.variableName) this.service.proxyOne$(action.variableName, value)
                                         return this.service.getCollectionActions().setOne({ payload: value })
                                     }
                                 }
@@ -69,7 +73,7 @@ export abstract class BaseEffects {
                             map(
                                 (value: any) => {
                                     this.executeParameter(action, value, true)
-                                    if (action.variableName) this.service.setVariable$(action.variableName, value)
+                                    if (action.variableName) this.service.proxyOne$(action.variableName, value)
                                     return this.service.getCollectionActions().setOne({ payload: value })
                                 }
                             ),
@@ -91,7 +95,7 @@ export abstract class BaseEffects {
                             map(
                                 (value: any) => {
                                     this.executeParameter(action, value, true)
-                                    if (action.variableName) this.service.setVariable$(action.variableName, value)
+                                    if (action.variableName) this.service.proxyMany$(action.variableName, value)
                                     return this.service.getCollectionActions().setMany({ payload: value.getData() })
                                 }
                             ),

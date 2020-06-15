@@ -10,7 +10,7 @@ import { Person } from '../models/person';
   styleUrls: ['./home.component.scss']
 })
 export class HomeComponent implements OnInit {
-  collaborator: Observable<any> = this.personService.getVariable$('selectedCollaborator')
+  collaborator: Observable<any> = this.personService.getVariableData$('selectedCollaborator')
   errors: Observable<any> = this.personService.getVariable$('errors')
 
   constructor(private personService: PersonService, private store: Store<any>) { }

@@ -1,5 +1,5 @@
 import { Injectable } from "@angular/core";
-import { BaseEffects } from 'projects/ngrx-coloquent/src/public-api';
+import { BaseEffects, ActionsContainer } from 'projects/ngrx-coloquent/src/public-api';
 import { PersonService } from './person.service';
 import { Actions } from '@ngrx/effects';
 import { Store } from '@ngrx/store';

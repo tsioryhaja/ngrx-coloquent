@@ -114,8 +114,29 @@ export abstract class BaseJsonAPIService<T extends AppModel> {
         return this.store.dispatch(ActionsContainer.getVarialbeAction().set({ payload: payload, variableName: variableName }))
     }
 
+    proxyOne$(variableName: string, payload: Data) {
+        return this.store.dispatch(ActionsContainer.getVarialbeAction().proxyOne({ payload: payload, variableName: variableName }))
+    }
+
+    proxyMany$(variableName: string, payload: Data[]) {
+        return this.store.dispatch(ActionsContainer.getVarialbeAction().proxyMany({ payload: payload, variableName: variableName }))
+    }
+
     getVariable$(variableName: string): Observable<any> {
         return this.store.select( state => state.variables[variableName] )
+    }
+
+    getVariableData$(variableName: string): Observable<any> {
+        return this.store.select(
+            (state) => {
+                let data = null;
+                let variableState = state.variables[variableName];
+                if (variableState) {
+                    data = variableState.getData(state[this.collection].entities);
+                }
+                return data
+            }
+        )
     }
 
     saveOne(data: T): Observable<any> {

@@ -1,5 +1,5 @@
 import { Injectable } from "@angular/core";
-import { BaseEffects } from 'ngrx-coloquent';
+import { BaseEffects, ActionsContainer } from 'projects/ngrx-coloquent/src/public-api';
 import { EmailService } from './email.service';
 import { Actions } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
