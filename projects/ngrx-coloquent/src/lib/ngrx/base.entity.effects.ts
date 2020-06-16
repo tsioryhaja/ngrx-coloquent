@@ -39,8 +39,6 @@ export abstract class BaseEffects {
                 exhaustMap(
                     (action) => {
                         return this.store.select(state => {
-                            console.log(this.service.getCollection())
-                            console.log(state)
                             return state[this.service.getCollection()].entities[action.queryId]
                         }).pipe(
                             map(

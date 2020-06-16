@@ -1,6 +1,6 @@
 import { Identity } from './identity';
 import { ActionsContainer } from 'projects/ngrx-coloquent/src/public-api';
-import { ToManyRelation } from '@herlinus/coloquent';
+import { toManyRelation } from '@herlinus/coloquent';
 import { Email } from './emails';
 
 @Identity.appendPolymorph('Person')
@@ -20,13 +20,7 @@ export class Person extends Identity {
         return this.getAttribute('given_name')
     }
 
-    emails(): ToManyRelation {
-        return this.hasMany(Email)
-    }
-
-    getEmails(): Email[] {
-        return this.getRelation('emails')
-    }
+    @toManyRelation(() => Email) emails;
 
     //readOnlyAttributes = ['display_name']
 }

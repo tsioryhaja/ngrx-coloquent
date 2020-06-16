@@ -178,8 +178,7 @@ export abstract class BaseJsonAPIService<T extends AppModel> {
     loadRelation(data: T, relationName: string) {
         return Observable.create(
             (observer) => {
-                let d = data[relationName]()
-                data[relationName]().get().then(
+                data[relationName].get().then(
                     (value) => {
                         observer.next(value)
                         observer.complete()
