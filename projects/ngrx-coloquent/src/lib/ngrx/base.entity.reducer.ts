@@ -45,7 +45,9 @@ export function variableReducer() {
         on(
             ActionsContainer.getVarialbeAction().proxyOne,
             (state, { payload, variableName }) => {
-                state[variableName] = new ProxyOneData(payload.getApiId())
+                let _id = null
+                if(payload) _id = payload.getApiId()
+                state[variableName] = new ProxyOneData(_id)
                 return state
             }
         ),

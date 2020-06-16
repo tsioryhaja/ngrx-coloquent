@@ -11,6 +11,7 @@ import { EffectsModule } from '@ngrx/effects';
 import { CollaboratorEffects } from './ngrx/collaborator.effects';
 import { EmailEffects } from './ngrx/email.effects';
 import { identityReducer } from './ngrx/identity.reducer';
+import { emailReducer } from './ngrx/email.reducer';
 
 @NgModule({
   declarations: [
@@ -21,7 +22,7 @@ import { identityReducer } from './ngrx/identity.reducer';
     BrowserModule,
     AppRoutingModule,
     //StoreModule.forRoot({variables: variableReducer(ActionsContainer.getVarialbeAction()), Identity: identityReducer}),
-    NgrxColoquentModule.forRoot({ Identity: identityReducer }),
+    NgrxColoquentModule.forRoot({ Identity: identityReducer, Email: emailReducer }),
     EffectsModule.forRoot([PersonEffects, EmailEffects])
   ],
   providers: [],

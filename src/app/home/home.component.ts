@@ -3,6 +3,7 @@ import { PersonService } from '../ngrx/person.service';
 import { Observable } from 'rxjs';
 import { Store } from '@ngrx/store';
 import { Person } from '../models/person';
+import { EmailService } from '../ngrx/email.service';
 
 @Component({
   selector: 'app-home',
@@ -11,16 +12,19 @@ import { Person } from '../models/person';
 })
 export class HomeComponent implements OnInit {
   collaborator: Observable<any> = this.personService.getVariableData$('selectedCollaborator')
+  emails: Observable<any> = this.emailService.getVariableData$('emails')
   errors: Observable<any> = this.personService.getVariable$('errors')
 
-  constructor(private personService: PersonService, private store: Store<any>) { }
+  constructor(private personService: PersonService, private emailService: EmailService, private store: Store<any>) { }
 
   ngOnInit(): void {
     this.personService.getOne$(500153, {
       variableName: 'selectedCollaborator',
       onSuccess: (data) => {
         this.personService.loadRelation$(data, 'emails', {
+          variableName: 'emails',
           onSuccess: (val) => {
+            console.log(val)
             data.setRelation(val.getData())
           }
         })

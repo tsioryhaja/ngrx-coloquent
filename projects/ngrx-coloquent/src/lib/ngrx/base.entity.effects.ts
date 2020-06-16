@@ -28,7 +28,7 @@ export abstract class BaseEffects {
 
     setRelationToStore(data: any) {
         let apiType = data.getJsonApiBaseType()
-        let action = ActionsContainer.getReducerAction(apiType).setOne(data)
+        let action = ActionsContainer.getReducerAction(apiType).setOne({ payload: data })
         this.store.dispatch(action)
     }
 
@@ -148,22 +148,28 @@ export abstract class BaseEffects {
                 ofType(this.service.actions.loadRelation),
                 exhaustMap(
                     (action: any) => {
-                        this.service.loadRelation(action.data, action.relationName).pipe(
-                            map(
-                                (value: any) => {
-                                    let data = value.getData()
-                                    if(isArray(data)) {
+                        this.service.loadRelation(action.data, action.relationName).subscribe(
+                            (value: any) => {
+                                let data = value.getData()
+                                if(!isArray(data)) {
+                                    if (data)
                                         this.setRelationToStore(data)
-                                    } else {
-                                        for (let element of data) {
-                                            this.setRelationToStore(element)
-                                        }
+                                } else {
+                                    for (let element of data) {
+                                        this.setRelationToStore(element)
                                     }
-                                    this.executeParameter(action, value, true)
                                 }
-                            ),
+                                if (action.parameters.variableName){
+                                    if (isArray(data)) {
+                                        this.service.proxyMany$(action.parameters.variableName, value)
+                                    } else {
+                                        this.service.proxyOne$(action.parameters.variableName, data)
+                                    }
+                                }
+                                this.executeParameter(action, value, true)
+                            },
                             catchError(this.sendError('errors', action))
-                        ).subscribe()
+                        )
                         return this.service.returnEmpty()
                     }
                 )
