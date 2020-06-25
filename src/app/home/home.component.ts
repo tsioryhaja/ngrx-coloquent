@@ -11,9 +11,10 @@ import { EmailService } from '../ngrx/email.service';
   styleUrls: ['./home.component.scss']
 })
 export class HomeComponent implements OnInit {
-  collaborator: Observable<any> = this.personService.getVariableData$('selectedCollaborator')
-  emails: Observable<any> = this.emailService.getVariableData$('emails')
-  errors: Observable<any> = this.personService.getVariable$('errors')
+  collaborator: Observable<any> = this.emailService.getVariableData$('selectedCollaborator');
+  all: Observable<any> = this.emailService.getVariableData$('testMany');
+  //emails: Observable<any> = this.emailService.getVariableData$('emails')
+  //errors: Observable<any> = this.personService.getVariable$('errors')
 
   constructor(private personService: PersonService, private emailService: EmailService, private store: Store<any>) { }
 
@@ -21,15 +22,21 @@ export class HomeComponent implements OnInit {
     this.personService.getOne$(500153, {
       variableName: 'selectedCollaborator',
       onSuccess: (data) => {
-        this.personService.loadRelation$(data, 'emails', {
+        /*this.personService.loadRelation$(data, 'emails', {
           variableName: 'emails',
           onSuccess: (val) => {
             console.log(val)
             data.setRelation(val.getData())
           }
-        })
+        })*/
+        //this.personService.getOne$(500154);
+        this.personService.getRelation$(data, 'emails')
       }
-    })
+    });
+    let query = this.personService.query()
+    this.personService.loadMany$(query.getBuilder(),0, {
+      variableName: 'testMany'
+    });
   }
 
   sendUpdate() {

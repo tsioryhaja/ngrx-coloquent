@@ -1,9 +1,2 @@
-{{ (collaborator | async)?.familyName }}
-
-{{ (errors | async) }}
-
-{{ (emails | async) }}
-
-<button (click)="sendUpdate()">Update</button>
-<button (click)="createPerson()">Create</button>
-<button (click)="getEmails()">Get emails</button>
+{{ (collaborator | async)?.familyName }}<br/>
+{{ (all | async) }}

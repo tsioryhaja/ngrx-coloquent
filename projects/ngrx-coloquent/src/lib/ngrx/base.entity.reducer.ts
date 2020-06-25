@@ -7,7 +7,7 @@ import { ProxyOneData, ProxyManyData } from './proxy';
 
 export function entityReducer(adapter: EntityAdapter<AppModel>, jsonApiType: string, actions: ReducerActions) {
     const initialState = adapter.getInitialState();
-    return createReducer(
+    const reducer = createReducer(
         initialState,
         on(
             actions.setOne,
@@ -18,7 +18,8 @@ export function entityReducer(adapter: EntityAdapter<AppModel>, jsonApiType: str
         on(
             actions.setMany,
             (state, { payload }) => {
-                return adapter.setAll(payload, state)
+                //return adapter.updateMany(payload, state);
+                return adapter.upsertMany(payload, state)
             }
         ),
         on(
@@ -29,11 +30,12 @@ export function entityReducer(adapter: EntityAdapter<AppModel>, jsonApiType: str
             }
         )
     )
+    return reducer;
 }
 
 export function variableReducer() {
     const initialState = {}
-    return createReducer(
+    const reducer = createReducer(
         initialState,
         on(
             ActionsContainer.getVarialbeAction().set,
@@ -47,22 +49,20 @@ export function variableReducer() {
             (state, { payload, variableName }) => {
                 let _id = null
                 if(payload) _id = payload.getApiId()
-                state[variableName] = new ProxyOneData(_id)
+                state[variableName] = new ProxyOneData(_id, payload.getJsonApiBaseType());
                 return state
             }
         ),
         on(
             ActionsContainer.getVarialbeAction().proxyMany,
             (state, { payload, variableName }) => {
-                let data = []
-                for (let obj of payload.getData()) {
-                    data.push(obj.getApiId())
-                }
-                state[variableName] = new ProxyManyData(data)
+                let data = payload;
+                state[variableName] = new ProxyManyData(data);
                 return state
             }
         )
     )
+    return reducer
 }
 
 export class ReducerContainer {

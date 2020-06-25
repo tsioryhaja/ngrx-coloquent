@@ -6,6 +6,8 @@ import { Observable, empty, EMPTY } from 'rxjs';
 import { Builder } from '@herlinus/coloquent';
 import { BaseQuery } from './base.entity.query';
 import { Data } from '@angular/router';
+import { NgrxColoquentConfigService } from './config';
+import { isArray } from 'util';
 
 export interface EntityActionParameters {
     variableName?: string
@@ -100,8 +102,26 @@ export abstract class BaseJsonAPIService<T extends AppModel> {
         return this.store
     }
 
+    stateFromFeature(state) {
+        let _state = state
+        //if (NgrxColoquentConfigService.isInFeature) _state = _state[NgrxColoquentConfigService.featureName]
+        return _state
+    }
+
+    storeFromFeature(selector) {
+        if (NgrxColoquentConfigService.isInFeature)
+            return this.store.select(NgrxColoquentConfigService.featureName).pipe(selector)
+        else
+            return this.store.select(selector)
+    }
+
     selectOne(id: number | string): Observable<any> {
-        return this.getStore().select(state => state[this.collection].entities[id])
+        return this.storeFromFeature(
+            state => {
+                let _state = this.stateFromFeature(state)
+                return _state[this.collection].entities[id]
+            }
+        )
     }
 
     query() {
@@ -123,21 +143,83 @@ export abstract class BaseJsonAPIService<T extends AppModel> {
     }
 
     getVariable$(variableName: string): Observable<any> {
-        return this.store.select( state => state.variables[variableName] )
-    }
-
-    getVariableData$(variableName: string): Observable<any> {
-        return this.store.select(
-            (state) => {
-                let data = null;
-                let variableState = state.variables[variableName];
-                if (variableState) {
-                    data = variableState.getData(state[this.collection].entities);
-                }
-                return data
+        return this.storeFromFeature( 
+            state => {
+                let _state = this.stateFromFeature(state)
+                return _state.variables[variableName]
             }
         )
     }
+
+    getVariableData$(variableName: string): Observable<any> {
+        return this.storeFromFeature(
+            (state) => {
+                let data = null;
+                let _state = this.stateFromFeature(state)
+                let variableState = _state.variables[variableName];
+                if (variableState) {
+                    data = variableState.getData(_state);
+                }
+                return data;
+            }
+        )
+    }
+
+    getRelation$(data: T, relationName: string, parameters: EntityActionParameters = {}) {
+        let _data = { data: data, relationName: relationName }
+        if (parameters.variableName) _data['variableName'] = parameters.variableName
+        _data['parameters'] = parameters
+        return this.store.dispatch(this.actions.getRelation(_data))
+    }
+
+    getRelationData(data: T, relationName: string) {
+        let relationKey: string = data.getJsonApiType() + '_' + data.getApiId() + '_' + relationName;
+        return this.getVariableData$(relationKey)
+    }
+
+    getRelationVariableKey(data: T, relationName) {
+        return 
+    }
+
+    /*getRelationSync$(data: T, relationName: string) {
+        let relationKey: string = data.getJsonApiType() + '_' + data.getApiId() + '_' + relationName;
+        return Observable.create(
+            (observer) => {
+                this.getRelationData(data, relationName).subscribe(
+                    async (_data) => {
+                        if (!_data) {
+                            let _data = await data[relationName].get()
+                            _data = _data.getData();
+                            let action = null;
+                            let proxyAction = null;
+                            if (isArray(_data) && _data.length) {
+                                let d = _data[0];
+                                let jsonapiType = d.getJsonApiType();
+                                action = ActionsContainer.getReducerAction(jsonapiType).setMany({ payload: _data })
+                                proxyAction = this.proxyMany$(relationKey, _data)
+                            }
+                            else {
+                                let jsonapiType = _data.getJsonApiType();
+                                if (!_data) {
+                                    action = ActionsContainer.getReducerAction(jsonapiType).setOne({ payload: _data })
+                                    proxyAction = this.proxyMany$(relationKey, _data)
+                                }
+                            }
+                            if (action) this.store.dispatch(action)
+                            if (proxyAction) this.store.dispatch(proxyAction)
+                        }
+                        observer.next(data)
+                        observer.complete()
+                    },
+                    error => {
+                        observer.error(error)
+                        observer.complete()
+                    }
+                )
+            }
+        )
+        
+    }*/
 
     saveOne(data: T): Observable<any> {
         return Observable.create(

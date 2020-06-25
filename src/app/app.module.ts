@@ -3,7 +3,7 @@ import { NgModule } from '@angular/core';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import { NgrxColoquentModule, ActionsContainer } from 'projects/ngrx-coloquent/src/public-api';
+import { NgrxColoquentModule, ActionsContainer, NgrxColoquentFeatureModule, variableReducer, storeConfig } from 'projects/ngrx-coloquent/src/public-api';
 import { PersonEffects } from './ngrx/person.effects';
 import { HomeComponent } from './home/home.component';
 import { StoreModule } from '@ngrx/store';
@@ -13,6 +13,7 @@ import { EmailEffects } from './ngrx/email.effects';
 import { identityReducer } from './ngrx/identity.reducer';
 import { emailReducer } from './ngrx/email.reducer';
 
+
 @NgModule({
   declarations: [
     AppComponent,
@@ -21,9 +22,11 @@ import { emailReducer } from './ngrx/email.reducer';
   imports: [
     BrowserModule,
     AppRoutingModule,
-    //StoreModule.forRoot({variables: variableReducer(ActionsContainer.getVarialbeAction()), Identity: identityReducer}),
-    NgrxColoquentModule.forRoot({ Identity: identityReducer, Email: emailReducer }),
-    EffectsModule.forRoot([PersonEffects, EmailEffects])
+    StoreModule.forRoot({variables: variableReducer(), Identity: identityReducer}, storeConfig),
+    //StoreModule.forRoot({}, storeConfig),
+    //NgrxColoquentFeatureModule.forFeature({ Identity: identityReducer, Email: emailReducer }),
+    EffectsModule.forRoot([PersonEffects, EmailEffects])//,
+    //EffectsModule.forRoot([])
   ],
   providers: [],
   bootstrap: [AppComponent]

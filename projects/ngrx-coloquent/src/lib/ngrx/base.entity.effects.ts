@@ -3,8 +3,8 @@ import { Actions, ofType, createEffect } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
 import { BaseJsonAPIService } from './base.entity.class';
 import { Model as AppModel, PluralResponse } from '@herlinus/coloquent';
-import { exhaustMap, map, catchError } from 'rxjs/operators';
-import { EMPTY, Observable } from 'rxjs';
+import { exhaustMap, map, catchError, first } from 'rxjs/operators';
+import { EMPTY, Observable, never } from 'rxjs';
 import { isArray } from 'util';
 import { ActionsContainer } from './base.entity.actions';
 
@@ -38,17 +38,18 @@ export abstract class BaseEffects {
                 ofType(this.service.actions.getOne),
                 exhaustMap(
                     (action) => {
-                        return this.store.select(state => {
+                        return this.service.storeFromFeature(state => {
+                            let _state = this.service.stateFromFeature(state)
                             return state[this.service.getCollection()].entities[action.queryId]
-                        }).pipe(
+                        }).pipe(first()).pipe(
                             map(
                                 (value: any) => {
                                     if(!value) {
-                                        return this.service.actions.loadOne({ queryId: action.queryId })
+                                        return this.service.actions.loadOne({ queryId: action.queryId, parameters: action.parameters })
                                     }
                                     else {
                                         this.executeParameter(action, value, true)
-                                        if (action.variableName) this.service.proxyOne$(action.variableName, value)
+                                        if (action.parameters.variableName) this.service.proxyOne$(action.parameters.variableName, value)
                                         return this.service.getCollectionActions().setOne({ payload: value })
                                     }
                                 }
@@ -71,7 +72,7 @@ export abstract class BaseEffects {
                             map(
                                 (value: any) => {
                                     this.executeParameter(action, value, true)
-                                    if (action.variableName) this.service.proxyOne$(action.variableName, value)
+                                    if (action.parameters.variableName) this.service.proxyOne$(action.parameters.variableName, value)
                                     return this.service.getCollectionActions().setOne({ payload: value })
                                 }
                             ),
@@ -93,7 +94,7 @@ export abstract class BaseEffects {
                             map(
                                 (value: any) => {
                                     this.executeParameter(action, value, true)
-                                    if (action.variableName) this.service.proxyMany$(action.variableName, value)
+                                    if (action.parameters.variableName) this.service.proxyMany$(action.parameters.variableName, value.getData())
                                     return this.service.getCollectionActions().setMany({ payload: value.getData() })
                                 }
                             ),
@@ -134,8 +135,43 @@ export abstract class BaseEffects {
                     (action: any) => {
                         let callback = action.callback
                         let data = action.data
-                        callback(data)
+                        setTimeout( () => { callback(data) }, 20)
                         return this.service.returnEmpty()
+                    }
+                )
+            )
+        }
+    )
+
+    getRelation$ = createEffect(
+        () => {
+            return this.actions$.pipe(
+                ofType(this.service.actions.getRelation),
+                exhaustMap(
+                    (action) => {
+                        let relationKey: string = action.data.getJsonApiType() + '_' + action.data.getApiId() + '_' + action.relationName;
+                        this.service.getVariableData$(relationKey).pipe(first()).subscribe(
+                            (data) => {
+                                let response = null
+                                if (!data) this.service.loadRelation$(action.data, action.relationName, action.parameters);
+                                else {
+                                    if (isArray(data)) {
+                                        this.service.proxyMany$(relationKey, data);
+                                        if (action.parameters.variableName) {
+                                            this.service.proxyMany$(action.parameters.variableName, data);
+                                        }
+                                    }
+                                    else {
+                                        this.service.proxyOne$(relationKey, data);
+                                        if (action.parameters.variableName) {
+                                            this.service.proxyOne$(action.parameters.variableName, data);
+                                        }
+                                    }
+                                    this.executeParameter(action, data, true);
+                                } 
+                            }
+                        )
+                        return this.service.returnEmpty();
                     }
                 )
             )
@@ -148,20 +184,24 @@ export abstract class BaseEffects {
                 ofType(this.service.actions.loadRelation),
                 exhaustMap(
                     (action: any) => {
+                        let relationKey: string = action.data.getJsonApiType() + '_' + action.data.getApiId() + '_' + action.relationName;
                         this.service.loadRelation(action.data, action.relationName).subscribe(
                             (value: any) => {
                                 let data = value.getData()
                                 if(!isArray(data)) {
-                                    if (data)
+                                    if (data) {
+                                        this.service.proxyOne$(relationKey, data)
                                         this.setRelationToStore(data)
+                                    }
                                 } else {
                                     for (let element of data) {
+                                        this.service.proxyMany$(relationKey, data)
                                         this.setRelationToStore(element)
                                     }
                                 }
                                 if (action.parameters.variableName){
                                     if (isArray(data)) {
-                                        this.service.proxyMany$(action.parameters.variableName, value)
+                                        this.service.proxyMany$(action.parameters.variableName, data)
                                     } else {
                                         this.service.proxyOne$(action.parameters.variableName, data)
                                     }
