@@ -19,7 +19,10 @@ export function entityReducer(adapter: EntityAdapter<AppModel>, jsonApiType: str
             actions.setMany,
             (state, { payload }) => {
                 //return adapter.updateMany(payload, state);
-                return adapter.upsertMany(payload, state)
+                for (const entity of payload) {
+                    state = adapter.setOne(entity, state);
+                }
+                return state;
             }
         ),
         on(

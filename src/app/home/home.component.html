@@ -1,2 +1,6 @@
 {{ (collaborator | async)?.familyName }}<br/>
-{{ (all | async) }}
+<ul>
+    <li *ngFor="let e of (all | async)">
+        {{ e.familyName }}
+    </li>
+</ul>

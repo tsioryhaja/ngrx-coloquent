@@ -13,8 +13,6 @@ import { EmailService } from '../ngrx/email.service';
 export class HomeComponent implements OnInit {
   collaborator: Observable<any> = this.emailService.getVariableData$('selectedCollaborator');
   all: Observable<any> = this.emailService.getVariableData$('testMany');
-  //emails: Observable<any> = this.emailService.getVariableData$('emails')
-  //errors: Observable<any> = this.personService.getVariable$('errors')
 
   constructor(private personService: PersonService, private emailService: EmailService, private store: Store<any>) { }
 
@@ -28,14 +26,14 @@ export class HomeComponent implements OnInit {
             console.log(val)
             data.setRelation(val.getData())
           }
-        })*/
+        })
         //this.personService.getOne$(500154);
-        this.personService.getRelation$(data, 'emails')
+        this.personService.getRelation$(data, 'emails')*/
+        const query = this.personService.query();
+        this.personService.loadMany$(query.getBuilder(), 0, {
+          variableName: 'testMany'
+        });
       }
-    });
-    let query = this.personService.query()
-    this.personService.loadMany$(query.getBuilder(),0, {
-      variableName: 'testMany'
     });
   }
 
