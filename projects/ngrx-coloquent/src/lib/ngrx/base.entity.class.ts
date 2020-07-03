@@ -7,7 +7,6 @@ import { Builder } from '@herlinus/coloquent';
 import { BaseQuery } from './base.entity.query';
 import { Data } from '@angular/router';
 import { NgrxColoquentConfigService } from './config';
-import { isArray } from 'util';
 
 export interface EntityActionParameters {
     variableName?: string
@@ -226,12 +225,12 @@ export abstract class BaseJsonAPIService<T extends AppModel> {
             (observer) => {
                 data.save().then(
                     (value) => {
-                        observer.next(data)
-                        observer.complete()
+                        observer.next(value.getModel());
+                        observer.complete();
                     }
                 ).catch(
                     (reason: any) => {
-                        observer.error(reason)
+                        observer.error(reason);
                     }
                 )
             }
