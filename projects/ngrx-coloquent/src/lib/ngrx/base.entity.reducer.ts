@@ -5,6 +5,24 @@ import { createReducer, on } from '@ngrx/store';
 import { ProxyOneData, ProxyManyData } from './proxy';
 
 
+function updateStateObject (payload: any, state: any) {
+    const payloadId = payload.getApiId();
+    if (payloadId in state.entities) {
+        const data = state.entities[payloadId];
+        data.populateFromResource({id: payloadId, attributes: payload.getAttributes(), type: payload.getJsonApiType(), relationships: {}});
+        const relations = data.getRelations();
+        for (const relationName of relations) {
+            const relation = payload.getRelation(relationName);
+            if (relation) {
+                data.setRelation(relationName, relation);
+            }
+        }
+        payload = data;
+    }
+    return payload;
+}
+
+
 export function entityReducer(adapter: EntityAdapter<AppModel>, jsonApiType: string, actions: ReducerActions) {
     const initialState = adapter.getInitialState();
     const reducer = createReducer(
@@ -12,6 +30,7 @@ export function entityReducer(adapter: EntityAdapter<AppModel>, jsonApiType: str
         on(
             actions.setOne,
             (state, { payload }) => {
+                payload = updateStateObject(payload, state);
                 return adapter.setOne(payload, state)
             }
         ),
@@ -19,7 +38,8 @@ export function entityReducer(adapter: EntityAdapter<AppModel>, jsonApiType: str
             actions.setMany,
             (state, { payload }) => {
                 //return adapter.updateMany(payload, state);
-                for (const entity of payload) {
+                for (let entity of payload) {
+                    entity = updateStateObject(entity, state);
                     state = adapter.setOne(entity, state);
                 }
                 return state;

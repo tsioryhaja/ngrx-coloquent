@@ -3,7 +3,7 @@ import { Actions, ofType, createEffect } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
 import { BaseJsonAPIService } from './base.entity.class';
 import { Model as AppModel, PluralResponse } from '@herlinus/coloquent';
-import { exhaustMap, map, catchError, first } from 'rxjs/operators';
+import { exhaustMap, map, catchError, first, concatMap, mergeMap } from 'rxjs/operators';
 import { EMPTY, Observable, never } from 'rxjs';
 import { isArray } from 'util';
 import { ActionsContainer } from './base.entity.actions';
@@ -36,7 +36,7 @@ export abstract class BaseEffects {
         () => {
             return this.actions$.pipe(
                 ofType(this.service.actions.getOne),
-                exhaustMap(
+                mergeMap(
                     (action) => {
                         return this.service.storeFromFeature(state => {
                             let _state = this.service.stateFromFeature(state)
@@ -66,7 +66,7 @@ export abstract class BaseEffects {
         () => {
             return this.actions$.pipe(
                 ofType(this.service.actions.loadOne),
-                exhaustMap(
+                mergeMap(
                     (action) => {
                         return this.service.getOne(action.queryId).pipe(
                             map(
@@ -88,7 +88,7 @@ export abstract class BaseEffects {
         () => {
             return this.actions$.pipe(
                 ofType(this.service.actions.loadMany),
-                exhaustMap(
+                mergeMap(
                     (action) => {
                         return this.service.getMany(action.query, action.page).pipe(
                             map(
@@ -110,7 +110,7 @@ export abstract class BaseEffects {
         () => {
             return this.actions$.pipe(
                 ofType(this.service.actions.save),
-                exhaustMap(
+                concatMap(
                     (action: any) => {
                         return this.service.saveOne(action.data).pipe(
                             map(
@@ -131,7 +131,7 @@ export abstract class BaseEffects {
         () => {
             return this.actions$.pipe(
                 ofType(this.service.actions.executeCallback),
-                exhaustMap(
+                mergeMap(
                     (action: any) => {
                         let callback = action.callback
                         let data = action.data
@@ -147,7 +147,7 @@ export abstract class BaseEffects {
         () => {
             return this.actions$.pipe(
                 ofType(this.service.actions.getRelation),
-                exhaustMap(
+                mergeMap(
                     (action) => {
                         let relationKey: string = action.data.getJsonApiType() + '_' + action.data.getApiId() + '_' + action.relationName;
                         this.service.getVariableData$(relationKey).pipe(first()).subscribe(
@@ -182,7 +182,7 @@ export abstract class BaseEffects {
         () => {
             return this.actions$.pipe(
                 ofType(this.service.actions.loadRelation),
-                exhaustMap(
+                mergeMap(
                     (action: any) => {
                         let relationKey: string = action.data.getJsonApiType() + '_' + action.data.getApiId() + '_' + action.relationName;
                         this.service.loadRelation(action.data, action.relationName).subscribe(
@@ -199,6 +199,7 @@ export abstract class BaseEffects {
                                         this.setRelationToStore(element)
                                     }
                                 }
+                                action.data.setRelation(action.relationName, data);
                                 if (action.parameters.variableName){
                                     if (isArray(data)) {
                                         this.service.proxyMany$(action.parameters.variableName, data)
@@ -221,7 +222,7 @@ export abstract class BaseEffects {
         () => {
             return this.actions$.pipe(
                 ofType(this.service.actions.deleteOne),
-                exhaustMap(
+                concatMap(
                     (action: any) => {
                         return this.service.deleteOne(action.data).pipe(
                             map(

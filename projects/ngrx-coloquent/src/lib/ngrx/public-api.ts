@@ -4,5 +4,6 @@ export * from './base.entity.effects';
 export * from './base.entity.query';
 export * from './base.entity.reducer';
 export * from './variable.service';
+export * from './selector.service';
 export * from './config';
 export * from './proxy';
