@@ -32,6 +32,7 @@ export class HomeComponent implements OnInit {
         //this.personService.getOne$(500154);
         this.personService.getRelation$(data, 'emails')*/
         const query = this.personService.query();
+        this.personService.loadOne$(500153, {}, ['client']);
         this.personService.loadMany$(query.getBuilder(), 0, {
           variableName: 'testMany'
         });

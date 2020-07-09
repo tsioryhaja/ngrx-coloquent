@@ -9,9 +9,9 @@ import { Data } from '@angular/router';
 import { NgrxColoquentConfigService } from './config';
 
 export interface EntityActionParameters {
-    variableName?: string
-    onSuccess?: Function
-    onFailure?: Function
+    variableName?: string;
+    onSuccess?: Function;
+    onFailure?: Function;
 }
 
 @Injectable({
@@ -49,15 +49,15 @@ export abstract class BaseJsonAPIService<T extends AppModel> {
     constructor(protected store: Store<any>) {
     }
 
-    getOne$(id: number | string, parameters: EntityActionParameters = {}) {
-        let data = { queryId: id }
-        if (parameters.variableName) data['variableName'] = parameters.variableName
-        data['parameters'] = parameters
-        return this.store.dispatch(this.actions.getOne(data))
+    getOne$(id: number | string, parameters: EntityActionParameters = {}, includedRelationships: string[] = []) {
+        let data = { queryId: id, with: includedRelationships };
+        if (parameters.variableName) data['variableName'] = parameters.variableName;
+        data['parameters'] = parameters;
+        return this.store.dispatch(this.actions.getOne(data));
     }
 
-    loadOne$(id: number | string, parameters: EntityActionParameters = {}) {
-        let data = { queryId: id }
+    loadOne$(id: number | string, parameters: EntityActionParameters = {}, includedRelationships: string[] = []) {
+        let data = { queryId: id, with: includedRelationships };
         if (parameters.variableName) data['variableName'] = parameters.variableName
         data['parameters'] = parameters
         return this.store.dispatch(this.actions.loadOne(data))
@@ -70,14 +70,18 @@ export abstract class BaseJsonAPIService<T extends AppModel> {
         return this.store.dispatch(this.actions.loadMany(data))
     }
 
-    getOne(id: number | string): Observable<any> {
+    getOne(id: number | string, included: string[]): Observable<any> {
         return Observable.create(
             (observer) => {
-                this.resource.find(id).then(
+                let query = this.resource.query();
+                for (const field of included) {
+                    query = query.with(field);
+                }
+                query.find(id).then(
                     (data) => {
-                        let entity = data.getData();
-                        observer.next(entity)
-                        observer.complete()
+                        const entity = data.getData();
+                        observer.next(entity);
+                        observer.complete();
                     }
                 )
             }

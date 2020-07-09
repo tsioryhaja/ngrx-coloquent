@@ -11,7 +11,7 @@ function updateStateObject (payload: any, state: any) {
         const data = state.entities[payloadId];
         data.populateFromResource({id: payloadId, attributes: payload.getAttributes(), type: payload.getJsonApiType(), relationships: {}});
         const relations = data.getRelations();
-        for (const relationName of relations) {
+        for (const relationName of Object.keys(relations)) {
             const relation = payload.getRelation(relationName);
             if (relation) {
                 data.setRelation(relationName, relation);
