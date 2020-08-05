@@ -1,5 +1,5 @@
 import { Model as AppModel } from '@herlinus/coloquent';
-import { EntityActions, ReducerActions, ActionsContainer } from './base.entity.actions';
+import { EntityActions, ReducerActions, ActionsContainer, entityReducerActions, entityEffectsActions } from './base.entity.actions';
 import { Injectable } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Observable, empty, EMPTY } from 'rxjs';
@@ -20,6 +20,8 @@ export interface EntityActionParameters {
 export abstract class BaseJsonAPIService<T extends AppModel> {
     protected abstract resource: any
     protected abstract resourceType: string
+    actionsData: EntityActions;
+    reducersAction: ReducerActions;
 
     getCollection(): string {
         return this.collection
@@ -39,11 +41,17 @@ export abstract class BaseJsonAPIService<T extends AppModel> {
     }
 
     get collectionActions(): ReducerActions {
-        return ActionsContainer.getReducerAction(this.collection)
+        if (!this.reducersAction) {
+            this.reducersAction = entityReducerActions(this.resource.getJsonApiBaseType());
+        }
+        return this.reducersAction;
     }
 
     get actions(): EntityActions {
-        return ActionsContainer.getEffectAction(this.resourceType)
+        if (!this.actionsData) {
+            this.actionsData = entityEffectsActions(this.getActualType());
+        }
+        return this.actionsData;
     }
 
     constructor(protected store: Store<any>) {
@@ -87,7 +95,8 @@ export abstract class BaseJsonAPIService<T extends AppModel> {
     getMany(builder: Builder, page: number): Observable<any> {
         return Observable.create(
             (observer) => {
-                builder.get().then(
+                page = page ? page : 1;
+                builder.get(page).then(
                     (data: any) => {
                         observer.next(data)
                         observer.complete()
