@@ -43,8 +43,8 @@ export enum ServerStates {
 
 export function entityEffectsActions(jsonApiType: string): EntityActions {
     let actions =  {
-        getOne: createAction('[' + jsonApiType + '/MODEL] Get One', props<{ queryId: number | string, variableName?: string, parameters?: any }>()),
-        loadOne: createAction('[' + jsonApiType + '/MODEL] Load One', props<{ queryId: number | string, variableName?: string, parameters?: any }>()),
+        getOne: createAction('[' + jsonApiType + '/MODEL] Get One', props<{ queryId: number | string, variableName?: string, parameters?: any, with?: string[] }>()),
+        loadOne: createAction('[' + jsonApiType + '/MODEL] Load One', props<{ queryId: number | string, variableName?: string, parameters?: any, with?: string[]  }>()),
         loadMany: createAction('[' + jsonApiType + '/MODEL] Load Many', props<{ query: Builder, page: number, variableName?: string, parameters?: any }>()),
         save: createAction('[' + jsonApiType + '/MODEL] Save One', props<{ data: AppModel, parameters?: any }>()),
         loadRelation: createAction('[' + jsonApiType + '/MODEL] Load Relation', props<{ data: AppModel, relationName: string, variableName?: string, parameters?: any }>()),
