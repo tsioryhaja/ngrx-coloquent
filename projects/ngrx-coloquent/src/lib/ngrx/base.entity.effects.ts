@@ -23,6 +23,7 @@ export abstract class BaseEffects {
   ) {}
 
   getOne$ = createEffect(() => {
+    console.log('Get Log One');
     return this.actions$.pipe(
       ofType(this.service.actions.getOne),
       mergeMap((action) => {

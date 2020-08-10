@@ -9,8 +9,8 @@ function updateStateObject (payload: any, state: any) {
     const payloadId = payload.getApiId();
     if (payloadId in state.entities) {
         const data = state.entities[payloadId];
-        data.populateFromResource({id: payloadId, attributes: payload.getAttributes(), type: payload.getJsonApiType(), relationships: {}});
         const relations = data.getRelations();
+        data.populateFromResource({id: payloadId, attributes: payload.getAttributes(), type: payload.getJsonApiType(), relationships: data.getRelations()});
         for (const relationName of Object.keys(relations)) {
             const relation = payload.getRelation(relationName);
             if (relation) {
