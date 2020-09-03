@@ -16,7 +16,6 @@ export const FEATURE_CONFIG_TOKEN = new InjectionToken<any>('Registered Reducers
             let reducer = reducers[reducer_name]
             initialState[reducer_name] = reducer(void 0, {type: 'None'})
         }
-        console.log(initialState);
         return {initialState: initialState};
     }
 })

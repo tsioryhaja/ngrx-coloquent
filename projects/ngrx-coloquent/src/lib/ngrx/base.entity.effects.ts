@@ -23,7 +23,6 @@ export abstract class BaseEffects {
   ) {}
 
   getOne$ = createEffect(() => {
-    console.log('Get Log One');
     return this.actions$.pipe(
       ofType(this.service.actions.getOne),
       mergeMap((action) => {
@@ -107,13 +106,22 @@ export abstract class BaseEffects {
     return this.actions$.pipe(
       ofType(this.service.actions.save),
       concatMap((action: any) => {
+        const isDirty = action.data.isDirty();
+        if (!isDirty) {
+          this.executeParameter(action, action.data, true);
+          return this.service.returnEmpty();
+        }
         return this.service.saveOne(action.data).pipe(
           map((value: any) => {
             this.executeParameter(action, value, true);
-            this.correctRelationship([value]);
+            //this.correctRelationship([value]);
+            const attributes = value.getAttributes();
+            for (const attributeKey of Object.keys(attributes)) {
+              action.data.setAttribute(attributeKey, value.getAttribute(attributeKey));
+            }
             return this.service
               .getCollectionActions()
-              .setOne({ payload: value });
+              .setOne({ payload: action.data });
           }),
           catchError(this.sendError('errors', action))
         );
@@ -234,7 +242,7 @@ export abstract class BaseEffects {
   });
 
   sendError(errorKeyName, action) {
-    return (err, caught: Observable<any>) => {
+    return (err) => {
       this.executeParameter(action, err, false);
       return EMPTY;
     };

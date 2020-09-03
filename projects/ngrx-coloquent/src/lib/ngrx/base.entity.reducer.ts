@@ -7,17 +7,26 @@ import { ProxyOneData, ProxyManyData } from './proxy';
 
 function updateStateObject (payload: any, state: any) {
     const payloadId = payload.getApiId();
-    if (payloadId in state.entities) {
+    if (payloadId in state.ids || '' + payloadId in state.entities) {
         const data = state.entities[payloadId];
-        const relations = data.getRelations();
-        data.populateFromResource({id: payloadId, attributes: payload.getAttributes(), type: payload.getJsonApiType(), relationships: data.getRelations()});
-        for (const relationName of Object.keys(relations)) {
-            const relation = payload.getRelation(relationName);
-            if (relation) {
-                data.setRelation(relationName, relation);
+        if (data) {
+            const relations = data.getRelations();
+            data.populateFromResource(
+                {
+                    id: payloadId,
+                    attributes: payload.getAttributes(),
+                    type: payload.getJsonApiType(),
+                    relationships: data.getRelations()
+                }
+            );
+            for (const relationName of Object.keys(relations)) {
+                const relation = payload.getRelation(relationName);
+                if (relation) {
+                    data.setRelation(relationName, relation);
+                }
             }
+            payload = data;
         }
-        payload = data;
     }
     return payload;
 }

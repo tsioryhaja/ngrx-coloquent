@@ -90,6 +90,15 @@ export abstract class BaseJsonAPIService<T extends AppModel> {
                         const entity = data.getData();
                         observer.next(entity);
                         observer.complete();
+                    },
+                    (error: any) => {
+                        observer.error(error);
+                        observer.complete();
+                    }
+                ).catch(
+                    (error) => {
+                        observer.error(error);
+                        observer.complete();
                     }
                 )
             }
@@ -103,9 +112,18 @@ export abstract class BaseJsonAPIService<T extends AppModel> {
                 builder.get(page).then(
                     (data: any) => {
                         observer.next(data)
-                        observer.complete()
+                        observer.complete();
+                    },
+                    (error: any) => {
+                        observer.error(error);
+                        observer.complete();
                     }
-                )
+                ).catch(
+                    (error: any) => {
+                        observer.error(error);
+                        observer.complete();
+                    }
+                );
             }
         )
     }
@@ -236,14 +254,24 @@ export abstract class BaseJsonAPIService<T extends AppModel> {
     saveOne(data: T): Observable<any> {
         return Observable.create(
             (observer) => {
+                if (!data.isDirty()) {
+                    observer.next(data);
+                    observer.complete();
+                    return;
+                }
                 data.save().then(
                     (value) => {
                         observer.next(value.getModel());
+                        observer.complete();
+                    },
+                    (error: any) => {
+                        observer.error(error);
                         observer.complete();
                     }
                 ).catch(
                     (reason: any) => {
                         observer.error(reason);
+                        observer.complete();
                     }
                 )
             }
@@ -276,6 +304,10 @@ export abstract class BaseJsonAPIService<T extends AppModel> {
                     (value) => {
                         observer.next(value)
                         observer.complete()
+                    },
+                    (error: any) => {
+                        observer.error(error);
+                        observer.complete();
                     }
                 ).catch(
                     (err) => {
@@ -305,11 +337,15 @@ export abstract class BaseJsonAPIService<T extends AppModel> {
                     (value) => {
                         observer.next({ data, value })
                         observer.complete()
+                    },
+                    (error: any) => {
+                        observer.error(error);
+                        observer.complete();
                     }
                 ).catch(
                     (reason) => {
-                        observer.error(reason)
-                        observer.complete()
+                        observer.error(reason);
+                        observer.complete();
                     }
                 )
             }
