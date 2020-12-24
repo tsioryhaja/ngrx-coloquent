@@ -28,6 +28,7 @@ function updateStateObject (payload: any, state: any) {
             payload = data;
         }
     }
+    payload.relations.flushChanged()
     return payload;
 }
 
