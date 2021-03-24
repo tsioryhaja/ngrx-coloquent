@@ -5,6 +5,7 @@ import { NgrxColoquentConfigService, BaseNgrxColoquentConfigService } from './ng
 import { REDUCER_TOKEN, FEATURE_CONFIG_TOKEN } from './module-injector';
 import { NgModule } from '@angular/core';
 import { VariablesService } from './ngrx/variable.service';
+import { HttpClientModule } from '@angular/common/http';
 
 
 export const storeConfig = {
@@ -20,6 +21,7 @@ export const storeConfig = {
   declarations: [
   ],
   imports: [
+    HttpClientModule,
     StoreModule.forRoot(REDUCER_TOKEN, storeConfig)
   ],
   providers: [VariablesService],
