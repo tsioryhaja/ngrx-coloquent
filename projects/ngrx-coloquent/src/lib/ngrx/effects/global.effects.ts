@@ -84,13 +84,13 @@ export class GlobalEffects {
                             .pipe(
                                 map(
                                     (value: any) => {
+                                        console.log(action);
                                         this.executeParameters(action, value, true);
                                         return reducersSetOne({
                                             payload: value
                                         });
                                     }
-                                ),
-                                catchError(this.sendError('error', action))
+                                )
                             )
                     }
                 )
