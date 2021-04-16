@@ -23,9 +23,10 @@ export class EffectService {
                 }
                 query.find(queryId).then(
                     (data) => {
-                        const entity = data.getData();
-                        subscriber.next(entity);
-                        subscriber.complete()
+                        const result = data.getData();
+                        const response = data.getHttpClientResponse();
+                        subscriber.next({result, response});
+                        subscriber.complete();
                     },
                     (error) => {
                         subscriber.error(error);
@@ -50,7 +51,9 @@ export class EffectService {
             (subscriber) => {
                 query.get(page).then(
                     (data: any) => {
-                        subscriber.next(data.getData());
+                        const result = data.getData();
+                        const response = data.getHttpClientResponse();
+                        subscriber.next({result, response});
                         subscriber.complete();
                     },
                     (error: any) => {
@@ -76,7 +79,9 @@ export class EffectService {
                 }
                 data.save().then(
                     (value) => {
-                        observer.next(value.getModel());
+                        const result = value.getModel();
+                        const response = value.getHttpClientResponse();
+                        observer.next({result, response});
                         observer.complete();
                     },
                     (error) => {

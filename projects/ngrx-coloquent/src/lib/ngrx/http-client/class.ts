@@ -4,10 +4,13 @@ import { HttpClient as ColoquentHttpClient, HttpClientPromise } from "@herlinus/
 import { AngularHttpClientPromise } from "./promises";
 
 export class AngularHttpClient implements ColoquentHttpClient {
+    public get ngrxColoquentHttpClient() {
+        return this._httpClient;
+    }
     private _httpClient: HttpClient;
     private baseUrl: string;
     private get httpClient(): HttpClient {
-        this._httpClient = this._httpClient ? this._httpClient : inject(HttpClient);
+        this._httpClient = this._httpClient ? this._httpClient : null;
         return this._httpClient;
     }
 
@@ -22,7 +25,8 @@ export class AngularHttpClient implements ColoquentHttpClient {
             headers: {
                 Accept: 'application/vndi.api+json',
                 'Content-type': 'application/vnd.api+json'
-            }
+            },
+            observe: 'response'
         };
         return config;
     }

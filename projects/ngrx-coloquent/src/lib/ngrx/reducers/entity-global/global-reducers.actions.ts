@@ -21,3 +21,8 @@ export const reducerRemoveOne = createAction(
     '[JSONAPI/MODEL] Delete One',
     props<{ payload: Model }>()
 );
+
+export const reducerFirstInit = createAction(
+    '[JSONAPI/NGRX-COLOQUENT] First Init',
+    props<{ entityStateKeys: string[] }>()
+);
