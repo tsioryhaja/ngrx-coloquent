@@ -1,15 +1,27 @@
 import { Injectable, InjectionToken, Injector } from "@angular/core";
-import { Builder, Model } from "@herlinus/coloquent";
+import { Builder } from "@herlinus/coloquent";
 import { Action, Store } from "@ngrx/store";
 import { combineLatest, Observable } from "rxjs";
 import { map } from "rxjs/operators";
 import { EntityActionParameters } from "../../base.entity.class";
 import { effectsDeleteOne, effectsGetOne, effectsLoadMany, effectsLoadOne, effectsLoadRelation, effectsSave } from "../../effects/global-effects.actions";
 import { NGRX_COLOQUENT_ENTITY_KEY } from "./config";
+import { Model } from "./models";
 
 
 export interface EffectsStartActionInterface {
     effectsGetOne?: any, effectsLoadOne?: any, effectsLoadMany?: any, effectsLoadRelation?: any, effectsDeleteOne?: any, effectsSave?: any
+}
+
+function filterByEntity(state: any, entityTypes: string[]) {
+    const arrays = Object.entries(state).filter(
+        ([key, value]: [string, any]) =>  entityTypes.indexOf(value.getJsonApiType())
+    );
+    const result = {};
+    for (const [rowKey, rowValue] of arrays) {
+        result[rowKey] = rowValue;
+    }
+    return result;
 }
 
 export const DefaultEffectsStartAction: EffectsStartActionInterface = {
@@ -76,7 +88,7 @@ export class GlobalEntityService {
             .pipe(
                 map(
                     (state: any) => {
-                        return state[entityType.getJsonApiBaseType()].entities;
+                        return filterByEntity(state[entityType.getJsonApiBaseType()].entities, entityType.getModelKeys());
                     }
                 )
             )

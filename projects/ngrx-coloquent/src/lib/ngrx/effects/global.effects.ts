@@ -1,32 +1,33 @@
 import { HttpResponse } from "@angular/common/http";
 import { Injectable, InjectionToken, Injector } from "@angular/core";
-import { Builder, Model } from "@herlinus/coloquent";
+import { Model } from "@herlinus/coloquent";
 import { Actions, createEffect, ofType } from "@ngrx/effects";
 import { Store } from "@ngrx/store";
+import { TypedAction } from "@ngrx/store/src/models";
 import { EMPTY } from "rxjs";
 
 import { catchError, concatMap, first, map, mergeMap } from "rxjs/operators";
 import { NGRX_COLOQUENT_ENTITY_KEY } from "../reducers/entity-global/config";
 import { reducerSetMany, reducersSetOne, reducerRemoveOne } from "../reducers/entity-global/global-reducers.actions";
 import { EffectService } from "./effects.service";
-import { effectsDeleteOne, effectsExecuteCallback, effectsGetOne, effectsLoadMany, effectsLoadOne, effectsLoadRelation, effectsSave } from "./global-effects.actions";
+import { effectsDeleteOne, EffectsDeleteOneProps, effectsExecuteCallback, effectsGetOne, EffectsGetOneProps, effectsLoadMany, EffectsLoadManyProps, effectsLoadOne, EffectsLoadOneProps, effectsLoadRelation, EffectsLoadRelationProps, effectsSave, EffectsSaveProps } from "./global-effects.actions";
 
 export interface NgrxColoquentGlobalEffectsPostprocessesInterface {
     getOne?: (data: Model, response: HttpResponse<any> | null) => Model;
     loadOne?: (data: Model, response: HttpResponse<any>) => Model;
     loadMany?: (data: Model[], response: HttpResponse<any>) => Model[];
     saveOne?: (data: Model, response: HttpResponse<any>) => Model;
-    loadRelation?: (data: Model[], parent: Model) => Model;
+    loadRelation?: (data: Model[], parent: Model, response: HttpResponse<any>) => Model;
     deleteOne? :(data: Model) => Model;
 }
 
 export interface NgrxColoquentGlobalEffectsPreprocessesInterface {
-    getOne?: (id: any, entity: any) => any;
-    loadOne?: (id: any, entity: any) => any;
-    loadMany?: (builder: Builder, entity: any) => Builder;
-    saveOne?: (data: Model) => Model;
-    loadRelation?: (parent: Model, relationName: string) => Model;
-    deleteOne?: (data: Model) => Model;
+    getOne?: (action: EffectsGetOneProps & TypedAction<"[JSONAPI/MODEL] Get One">) => EffectsGetOneProps & TypedAction<"[JSONAPI/MODEL] Get One">;
+    loadOne?: (action: EffectsLoadOneProps & TypedAction<"[JSONAPI/MODEL] Load One">) => EffectsLoadOneProps & TypedAction<"[JSONAPI/MODEL] Load One">;
+    loadMany?: (action: EffectsLoadManyProps & TypedAction<"[JSONAPI/MODEL] Load Many">) => EffectsLoadManyProps & TypedAction<"[JSONAPI/MODEL] Load Many">;
+    saveOne?: (action: EffectsSaveProps & TypedAction<"[JSONAPI/MODEL] Save One">) => EffectsSaveProps & TypedAction<"[JSONAPI/MODEL] Save One">;
+    loadRelation?: (action: EffectsLoadRelationProps & TypedAction<"[JSONAPI/MODEL] Load Relation">) => EffectsLoadRelationProps & TypedAction<"[JSONAPI/MODEL] Load Relation">;
+    deleteOne?: (action: EffectsDeleteOneProps & TypedAction<"[JSONAPI/MODEL] Delete One">) => EffectsDeleteOneProps & TypedAction<"[JSONAPI/MODEL] Delete One">;
 }
 
 export const NGRX_COLOQUENT_GLOBAL_EFFECTS_POSTPROCESSES = new InjectionToken<NgrxColoquentGlobalEffectsPostprocessesInterface[]>('NGRX_COLOQUENT_GLOBAL_EFFECTS_POSTPROCESSES');
@@ -43,11 +44,11 @@ export class GlobalEffects {
             return data;
         },
         loadRelation: (postprocess, key: string, data: any) => {
-            data.parent = postprocess[key](data.model, data.parent);
+            data.parent = postprocess[key](data.model, data.parent, data.response);
             return data;
         },
         deleteOne: (postprocess, key: string, data: any) => {
-            data.model = postprocess[key](data.model);
+            data.model = postprocess[key](data.model, data.response);
             return data;
         }
     };
@@ -65,17 +66,20 @@ export class GlobalEffects {
     executePostprocesses(key: string, data: any) {
         const executor = this.postprocessExecutor[key] || this.postprocessExecutor['default'];
         for (const postprocess of this.postprocesses) {
-            data = executor(postprocess, key, data);
+            if (postprocess[key]) {
+                data = executor(postprocess, key, data);
+            }
         }
         return data;
     }
 
-    executePreprocesses(key: string, parameters: any[]) {
-        let result: any = null;
+    executePreprocesses(key: string, action: any) {
         for (const preprocess of this.preprocesses) {
-            result = preprocess[key].apply(preprocess, parameters);
+            if (preprocess[key]) {
+                action = preprocess[key](action);
+            }
         }
-        return result;
+        return action;
     }
 
     executeParameters(action, data, isSuccess) {
@@ -103,6 +107,7 @@ export class GlobalEffects {
                 ofType(effectsGetOne),
                 mergeMap(
                     action => {
+                        action = this.executePreprocesses('getOne', action);
                         const entityType = action.entityType.getJsonApiBaseType();
                         return this.store.select(
                             (state: any) => {
@@ -143,13 +148,14 @@ export class GlobalEffects {
                 ofType(effectsLoadOne),
                 mergeMap(
                     action => {
+                        action = this.executePreprocesses('loadOne', action);
                         return this.service.loadOne(action.entityType, action.queryId, action.with)
                             .pipe(
                                 map(
                                     (queryResult: any) => {
                                         let value = queryResult.result;
                                         if (value) {
-                                            const d = this.executePostprocesses('loadOne', { model: value, response: queryResult.response });
+                                            const d = this.executePostprocesses('loadOne', { model: value, response: queryResult.response.httpResponse });
                                             value = d.model;
                                         }
                                         this.executeParameters(action, value, true);
@@ -170,11 +176,12 @@ export class GlobalEffects {
                 ofType(effectsLoadMany),
                 mergeMap(
                     (action) => {
+                        action = this.executePreprocesses('loadMany', action);
                         return this.service.loadMany(action.query, action.page).pipe(
                             map(
                                 (queryResult: any) => {
                                     let data = queryResult.result;
-                                    const d = this.executePostprocesses('loadMany', { model: data, response: queryResult.response });
+                                    const d = this.executePostprocesses('loadMany', { model: data, response: queryResult.response.httpResponse });
                                     data = d.model;
                                     this.executeParameters(action, data, true);
                                     return reducerSetMany({payloads: data});
@@ -192,11 +199,12 @@ export class GlobalEffects {
             ofType(effectsSave),
             concatMap(
                 (action) => {
+                    action = this.executePreprocesses('saveOne', action);
                     return this.service.saveOne(action.data).pipe(
                         map(
                             (commandResult: any) => {
                                 let value = commandResult.result;
-                                const d = this.executePostprocesses('saveOne', { model: value, response: commandResult.response });
+                                const d = this.executePostprocesses('saveOne', { model: value, response: commandResult.response.httpResponse });
                                 value = d.model;
                                 this.executeParameters(action, value, true);
                                 return reducersSetOne({payload: value});
@@ -214,7 +222,6 @@ export class GlobalEffects {
             ofType(effectsExecuteCallback),
             mergeMap(
                 (action: any) => {
-                    console.log(action);
                     const [callback, data] = [action.callback, action.data];
                     setTimeout(
                         () => callback(data),
@@ -231,10 +238,10 @@ export class GlobalEffects {
             ofType(effectsLoadRelation),
             mergeMap(
                 (action) => {
+                    action = this.executePreprocesses('loadRelation', action);
                     this.service.loadRelation(action.data, action.relationName).subscribe(
                         (data: any) => {
-                            const d = this.executePostprocesses('loadRelation', { model: data.result, parent: action.data });
-                            data = d.data;
+                            const d = this.executePostprocesses('loadRelation', { model: data.result, parent: action.data, response: data.response.httpResponse });
                             this.executeParameters(action, data, true);
                             if (!Array.isArray(data)) {
                                 if (data) {
@@ -243,6 +250,7 @@ export class GlobalEffects {
                             } else {
                                 this.store.dispatch(reducerSetMany({ payloads: data }));
                             }
+                            this.store.dispatch(reducersSetOne({payload: action.data}));
                         }
                     );
                     return this.service.returnEmpty();
@@ -256,6 +264,7 @@ export class GlobalEffects {
             ofType(effectsDeleteOne),
             concatMap(
                 (action) => {
+                    action = this.executePreprocesses('deleteOne', action);
                     return this.service.deleteOne(action.data).pipe(
                         map(
                             (value) => {

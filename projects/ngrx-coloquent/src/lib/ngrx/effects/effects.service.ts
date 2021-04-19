@@ -103,7 +103,9 @@ export class EffectService {
             (observer) => {
                 data[relationName].get().then(
                     (value) => {
-                        observer.next(value.getData());
+                        const result = value.getData();
+                        const response = value.getHttpClientResponse();
+                        observer.next({result, response});
                         observer.complete();
                     },
                     (error: any) => {

@@ -22,7 +22,8 @@ import { reducerFirstInit } from "./ngrx/reducers/entity-global/global-reducers.
     bootstrap: []
 })
 export class NgrxColoquentGlobalModule {
-  constructor(httpClient: HttpClient, store: Store) {
+  constructor(httpClient: HttpClient, store: Store, service: GlobalEntityService) {
+    Model.ngrxColoquentService = service;
     const angularHttpClient = new AngularHttpClient(httpClient);
     Model.setBaseHttpClient(angularHttpClient);
     store.dispatch(reducerFirstInit({ entityStateKeys: Entities.jsonapiReducers }));

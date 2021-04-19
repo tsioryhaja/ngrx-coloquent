@@ -1,6 +1,13 @@
 import { HttpClient, Model as Model_, PaginationStrategy, PolymorphicModel as PolymorphicModel_ } from '@herlinus/coloquent';
 import { PolymorphicEntry, PolymorphicMapping } from '@herlinus/coloquent/dist/PolymorphicModel';
+import { Builder } from '@herlinus/coloquent';
+import { EntityActionParameters } from '../../base.entity.class';
 import { AngularHttpClient } from '../../http-client/class';
+import { NoServiceException } from './exceptions';
+import { Observable } from 'rxjs';
+import { QueryBuilder, StartPromise } from './query-builder';
+
+const NO_SERVICE_ERROR_MESSAGE = "There was no service setted for the entities. Check if you are inside angular execution context or if the NgrxColoquentModule is not imported";
 
 export class Entities {
     static jsonapiReducers: string[] = [];
@@ -50,6 +57,8 @@ export abstract class Model extends Model_ {
     static polymorphicOn = null;
 
     static polymorphicChild: PolymorphicChildren = null;
+
+    static ngrxColoquentService: any = null;
 
     static addPolymorphicChild(klass: any, key: string) {
         if (!this.polymorphicChild) return;
@@ -153,5 +162,60 @@ export abstract class Model extends Model_ {
             return this.constructor.JsonApiBaseType_;
         }
         return this.getJsonApiType();
+    }
+
+    static getOne$(id: number | string, parameters: EntityActionParameters = {}, includedRelationships: string[] = []) {
+        if (!this.ngrxColoquentService) throw new NoServiceException(NO_SERVICE_ERROR_MESSAGE);
+        this.ngrxColoquentService.getOne$(this, id, parameters, includedRelationships);
+    }
+
+    static loadOne$(id: number |string, parameters: EntityActionParameters = {}, includedRelationships: string[] = []) {
+        if (!this.ngrxColoquentService) throw new NoServiceException(NO_SERVICE_ERROR_MESSAGE);
+        this.ngrxColoquentService.loadOne$(this, id, parameters, includedRelationships);
+    }
+
+    static loadMany$(query: Builder, page: number = 1, parameters: EntityActionParameters = {}, includedRelationships: string[] = []) {
+        if (!this.ngrxColoquentService) throw new NoServiceException(NO_SERVICE_ERROR_MESSAGE);
+        this.ngrxColoquentService.loadMany$(query, page, parameters, includedRelationships);
+    }
+
+    static selectEntity$(selectorFunction: Function, customContentFilter: Observable<any>[] = []) {
+        if (!this.ngrxColoquentService) throw new NoServiceException(NO_SERVICE_ERROR_MESSAGE);
+        return this.ngrxColoquentService.selectEntity(selectorFunction, this, customContentFilter);
+    }
+
+    _save(parameters: EntityActionParameters = {}) {
+        if (!Model.ngrxColoquentService) throw new NoServiceException(NO_SERVICE_ERROR_MESSAGE);
+        Model.ngrxColoquentService.saveOne$(this, parameters);
+    }
+
+    _delete(parameters: EntityActionParameters = {}) {
+        if (!Model.ngrxColoquentService) throw new NoServiceException(NO_SERVICE_ERROR_MESSAGE);
+        Model.ngrxColoquentService.deleteOne$(this, parameters);
+    }
+
+    static query$(): QueryBuilder {
+        return new QueryBuilder(this);
+    }
+
+    static find$(id: number |string | any, includedRelationships: string[] = []) {
+        const that = this;
+        return new StartPromise((parameters: EntityActionParameters) => {
+            that.loadOne$(id, parameters, includedRelationships);
+        });
+    }
+
+    save$() {
+        const that = this;
+        return new StartPromise((parameters: EntityActionParameters) => {
+            that._save(parameters);
+        });
+    }
+
+    delete$() {
+        const that = this;
+        return new StartPromise((parameters: EntityActionParameters) => {
+            that._delete(parameters);
+        });
     }
 }
