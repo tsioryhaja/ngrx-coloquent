@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { GlobalEntityService } from 'projects/ngrx-coloquent/src/public-api';
 import { BehaviorSubject, Subject } from 'rxjs';
 import { Observable } from 'rxjs';
-import { Identity, Person } from '../models/collaborator';
+import { ClientContent, Collaborator, Identity, Person } from '../models/collaborator';
 
 @Component({
   selector: 'app-home',
@@ -35,11 +35,42 @@ export class HomeComponent implements OnInit {
         }
       }
     );
-    //this.service.loadOne$(Identity, '500245');
+    this.service.loadOne$(Identity, '500245');
+    Collaborator.find$('500245', ['emails']).onSuccess((data) => console.log(data)).start();
+    ClientContent.query$().get(1).onSuccess(
+      (data) => {
+        const d: ClientContent = data[0];
+        d.loadRelation$('person').onSuccess(
+          (pers) => {
+            console.log(pers);
+            console.log(d.getRelation('person'));
+          }
+        ).start();
+      }
+    ).start();
     Identity.query$().with('client').get()
-      .then(
+      .onSuccess(
         () => console.log('done')
-      );
+      ).onError(
+        () => console.error('ERROR')
+      ).start();
+
+    Identity.loadNext('identity', [
+      {
+        key: 'with',
+        value: ['client']
+      }
+    ]).onSuccess(
+      (data) => {
+        console.log(data);
+      }
+    )
+    .onError(
+      (data) => {
+        console.log(data);
+      }
+    )
+    .start()
   }
 
 }

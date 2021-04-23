@@ -3,12 +3,12 @@ import { NgModule } from '@angular/core';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import { NgrxColoquentModule, ActionsContainer, NgrxColoquentFeatureModule, variableReducer, NgrxColoquentGlobalModule, NGRX_COLOQUENT_GLOBAL_EFFECTS_PREPROCESSES, NGRX_COLOQUENT_GLOBAL_EFFECTS_POSTPROCESSES } from 'projects/ngrx-coloquent/src/public-api';
+import { NgrxColoquentModule, ActionsContainer, NgrxColoquentFeatureModule, variableReducer, NgrxColoquentGlobalModule, NGRX_COLOQUENT_GLOBAL_EFFECTS_PREPROCESSES, NGRX_COLOQUENT_GLOBAL_EFFECTS_POSTPROCESSES, NGRX_COLOQUENT_BASE_ERROR } from 'projects/ngrx-coloquent/src/public-api';
 import { HomeComponent } from './home/home.component';
 import { StoreModule } from '@ngrx/store';
 import { EffectsModule } from '@ngrx/effects';
 import { HTTP_INTERCEPTORS } from '@angular/common/http';
-import { TokenInterceptor } from './models/token.interceptor';
+import { ErrorInjector, TokenInterceptor } from './models/token.interceptor';
 import { FirstFilterPreprocessors } from './models/preprocessors';
 import { FirstPostProcessors } from './models/postprocessors';
 
@@ -47,6 +47,11 @@ const storeConfig = {
     {
       provide: NGRX_COLOQUENT_GLOBAL_EFFECTS_POSTPROCESSES,
       useClass: FirstPostProcessors,
+      multi: true
+    },
+    {
+      provide: NGRX_COLOQUENT_BASE_ERROR,
+      useClass: ErrorInjector,
       multi: true
     }
   ],

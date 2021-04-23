@@ -1,6 +1,5 @@
-import { InjectionToken, inject } from '@angular/core';
-import { ActionReducerMap } from '@ngrx/store';
-import { NgrxColoquentConfigService } from './ngrx/config';
+import { InjectionToken } from '@angular/core';
+import { NgrxColoquentConfigService } from '../ngrx/config';
 
 export const REDUCER_TOKEN = new InjectionToken<any>('Registered Reducers', {
     factory: () => {

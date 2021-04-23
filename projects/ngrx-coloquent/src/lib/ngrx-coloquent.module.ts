@@ -1,10 +1,8 @@
 import { StoreModule } from '@ngrx/store';
-import { variableReducer } from './ngrx/base.entity.reducer';
-import { EffectsModule } from '@ngrx/effects';
-import { NgrxColoquentConfigService, BaseNgrxColoquentConfigService } from './ngrx/config';
+import { NgrxColoquentConfigService, BaseNgrxColoquentConfigService } from '../ngrx/config';
 import { REDUCER_TOKEN, FEATURE_CONFIG_TOKEN } from './module-injector';
 import { NgModule } from '@angular/core';
-import { VariablesService } from './ngrx/variable.service';
+import { VariablesService } from '../ngrx/variable.service';
 import { HttpClientModule } from '@angular/common/http';
 
 

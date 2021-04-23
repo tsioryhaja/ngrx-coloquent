@@ -5,7 +5,7 @@ import { EffectsLoadManyProps, NgrxColoquentGlobalEffectsPreprocessesInterface }
 @Injectable()
 export class FirstFilterPreprocessors implements NgrxColoquentGlobalEffectsPreprocessesInterface {
     loadMany (action: EffectsLoadManyProps & TypedAction<"[JSONAPI/MODEL] Load Many">) {
-        action.query = action.query.where('id', '500245');
+        //action.query = action.query.where('id', '500245');
         return action;
     }
 }

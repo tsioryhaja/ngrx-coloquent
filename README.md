@@ -71,7 +71,7 @@ If you need to change something when from your component or service after the lo
 For example:
 
 ```javascript
-Identity.query$().where('client_id', 88456257).get().then(() =>  console.log('done')).error(() => console.error('not done'));
+Identity.query$().where('client_id', 88456257).get().onSuccess(() =>  console.log('done')).onError(() => console.error('not done'));
 ```
 
 To load One object by id, you can directly start the loading from the model
@@ -128,7 +128,7 @@ Person.selectEntity$(
 );
 ```
 
-You cann add specific filter from any observable (and other state then) to filter it. You just need to add a list of the observable of the data you need for the filter as second argument.
+You cann add specific filter from any observable (and other state too) to filter it. You just need to add a list of the observable of the data you need for the filter as second argument.
 
 For example:
 

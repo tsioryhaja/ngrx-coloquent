@@ -1,4 +1,5 @@
-import { Entities, Model } from "projects/ngrx-coloquent/src/lib/ngrx/reducers/entity-global/models";
+import { toOneRelation } from "@herlinus/coloquent";
+import { Entities, Model } from "projects/ngrx-coloquent/src/models/models";
 
 @Entities.hasReducer()
 export class Identity extends Model {
@@ -18,9 +19,29 @@ export class Person extends Identity {
     }
 }
 
+export class Dossier extends Model {
+    protected jsonApiType = 'Dossier';
+
+    public static getJsonApiBaseUrl() {
+        return 'https://sera-dev.absys.fr/api';
+    }
+}
+
 @Identity.appendPolymorph('Collaborator')
 export class Collaborator extends Person {
     protected jsonApiType = 'Collaborator';
+
+    @toOneRelation(() => Dossier) client;
+
+    public static getJsonApiBaseUrl(): string {
+        return 'https://sera-dev.absys.fr/api';
+    }
+}
+
+export class ClientContent extends Model {
+    protected jsonApiType = 'ClientContent';
+
+    @toOneRelation(() => Person) person;
 
     public static getJsonApiBaseUrl(): string {
         return 'https://sera-dev.absys.fr/api';

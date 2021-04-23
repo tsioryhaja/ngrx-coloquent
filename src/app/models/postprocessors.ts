@@ -1,7 +1,7 @@
 import { HttpResponse } from "@angular/common/http";
 import { Injectable } from "@angular/core";
-import { Model } from "projects/ngrx-coloquent/src/lib/ngrx/reducers/entity-global/models";
-import { NgrxColoquentGlobalEffectsPostprocessesInterface } from "projects/ngrx-coloquent/src/public-api";
+import { Model } from "projects/ngrx-coloquent/src/models/models";
+import { NgrxColoquentGlobalEffectsPostprocessesInterface } from "ngrx-coloquent";
 
 @Injectable()
 export class FirstPostProcessors implements NgrxColoquentGlobalEffectsPostprocessesInterface {
