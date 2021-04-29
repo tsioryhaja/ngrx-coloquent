@@ -7,6 +7,7 @@ import { EntityActionParameters } from "../ngrx/base.entity.class";
 import { effectsDeleteOne, effectsGetOne, effectsLoadMany, effectsLoadOne, effectsLoadRelation, effectsSave } from "../effects/global-effects.actions";
 import { NGRX_COLOQUENT_ENTITY_KEY } from "./config";
 import { Model } from "../models/models";
+import { reducersSetOne } from "./global-reducers.actions";
 
 
 export interface EffectsStartActionInterface {

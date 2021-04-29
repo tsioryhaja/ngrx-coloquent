@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { GlobalEntityService } from 'projects/ngrx-coloquent/src/public-api';
+import { GlobalEntityService, GlobalVariableService } from 'projects/ngrx-coloquent/src/public-api';
 import { BehaviorSubject, Subject } from 'rxjs';
 import { Observable } from 'rxjs';
 import { ClientContent, Collaborator, Identity, Person } from '../models/collaborator';
@@ -14,7 +14,6 @@ export class HomeComponent implements OnInit {
   collaborator: Observable<Identity> = Identity.selectEntity$(
     (state, filterData) => {
       console.log(filterData)
-      console.log(state);
       return state['500245'];
     },
     [
@@ -22,22 +21,34 @@ export class HomeComponent implements OnInit {
     ]
   );
   
-  constructor(private service: GlobalEntityService) {}
+  constructor(private variable: GlobalVariableService) {}
 
   ngOnInit(): void {
     console.log(Object.getPrototypeOf(Identity));
     console.log(Person.getModelKeys());
-    this.collaborator.subscribe(
+    /*this.collaborator.subscribe(
       (data) => {
-        if (data) console.log(Object.getPrototypeOf(data));
         if (data) {
+          console.log(Object.getPrototypeOf(data));
           console.log(data.getApiId());
         }
       }
+    );*/
+    this.variable.getProxiedVariable('collaborator').subscribe(
+      (col) => {
+        console.log('-------------------');
+        console.log(col);
+      }
     );
-    this.service.loadOne$(Identity, '500245');
-    Collaborator.find$('500245', ['emails']).onSuccess((data) => console.log(data)).start();
-    ClientContent.query$().get(1).onSuccess(
+    Collaborator.find$(500246)
+      .inVariable('collaborator').start();
+    //Collaborator.query().get().then((data) => console.log(data));
+    //Collaborator.query().find(500246).then((data) => console.log(data));
+    //this.service.loadOne$(Identity, '500245');
+    /*Collaborator.find('500245').then(
+      (data) => console.log(data)
+    );*/
+    /*ClientContent.query$().get(1).onSuccess(
       (data) => {
         const d: ClientContent = data[0];
         d.loadRelation$('person').onSuccess(
@@ -47,15 +58,15 @@ export class HomeComponent implements OnInit {
           }
         ).start();
       }
-    ).start();
-    Identity.query$().with('client').get()
+    ).start();*/
+    /*Identity.query$().with('client').get()
       .onSuccess(
         () => console.log('done')
       ).onError(
         () => console.error('ERROR')
-      ).start();
+      ).start();*/
 
-    Identity.loadNext('identity', [
+    /*Identity.loadNext('identity', [
       {
         key: 'with',
         value: ['client']
@@ -70,7 +81,7 @@ export class HomeComponent implements OnInit {
         console.log(data);
       }
     )
-    .start()
+    .start()*/
   }
 
 }

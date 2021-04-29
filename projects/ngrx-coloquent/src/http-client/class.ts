@@ -1,5 +1,4 @@
-import { HttpClient, HttpHeaders } from "@angular/common/http";
-import { inject } from "@angular/core";
+import { HttpClient } from "@angular/common/http";
 import { HttpClient as ColoquentHttpClient, HttpClientPromise } from "@herlinus/coloquent";
 import { AngularHttpClientPromise } from "./promises";
 

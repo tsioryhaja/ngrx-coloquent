@@ -1,5 +1,6 @@
-import { Model, Builder } from "@herlinus/coloquent";
+import { Builder } from "@herlinus/coloquent";
 import { createAction, props } from "@ngrx/store";
+import { Model } from "../models/models";
 
 export interface EffectsGetOneProps {
     entityType: typeof Model;

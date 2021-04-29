@@ -1,6 +1,6 @@
 import { Injectable } from "@angular/core";
-import { Builder, Model } from "@herlinus/coloquent";
 import { EMPTY, Observable } from "rxjs";
+import { Model } from "../models/models";
 
 @Injectable()
 export class EffectService {
@@ -17,10 +17,11 @@ export class EffectService {
     ) {
         return new Observable(
             (subscriber) => {
-                let query = BaseModel.query();
+                let query = BaseModel.__query();
                 for (const field of included) {
                     query = query.with(field);
                 }
+
                 query.find(queryId).then(
                     (data) => {
                         const result = data.getData();
@@ -44,7 +45,7 @@ export class EffectService {
 
 
     loadMany(
-        query: Builder,
+        query: any,
         page: any
     ) {
         return new Observable(

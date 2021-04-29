@@ -1,4 +1,4 @@
-import { HttpClient, Model as Model_, PaginationStrategy } from '@herlinus/coloquent';
+import { HttpClient, Model as Model_, PaginationStrategy, PluralResponse, SingularResponse } from '@herlinus/coloquent';
 import { PolymorphicEntry, PolymorphicMapping } from '@herlinus/coloquent/dist/PolymorphicModel';
 import { Builder } from '@herlinus/coloquent';
 import { EntityActionParameters } from '../ngrx/base.entity.class';
@@ -246,4 +246,68 @@ export abstract class Model extends Model_ {
             that.loadMany$(query.getBuilder(), page, parameters);
         });
     }
+
+    static __query() {
+        return super.query();
+    }
+
+    /*public static __get(page?: number) {
+        return super.get(page);
+    }
+
+    public static get(page?: number): Promise<PluralResponse> {
+        const that = this;
+        return new Promise((resolve, reject) => {
+                let query = that.query$();
+                query.get(page)
+                    .onSuccess((data) => {
+                        resolve(
+                            new PluralResponse(query.getBuilder().getQuery(), new AngularHttpClientResponse(new HttpResponse()), that, data)
+                        );
+                    })
+                    .onError((err) => reject(err)).start();
+            }
+        );
+    }
+
+    public static find(id: string | number) {
+        const that = this;
+        return new Promise<SingularResponse>(
+            (resolve, reject) => {
+                that.find$(id)
+                    .onSuccess(
+                        (data) => {
+                            resolve(new SingularResponse(
+                                that.query$().getBuilder().getQuery(),
+                                new AngularHttpClientResponse(new HttpResponse()), that, data));
+                        }
+                    )
+                    .onError((err) => reject(err)).start();
+            }
+        );
+    }
+
+    static query() {
+        return new CustomBuilder(this);
+    }
+
+    static with(attribute: any) {
+        return new CustomBuilder(this).with(attribute);
+    }
+
+    static limit(limit: number) {
+        return new CustomBuilder(this).limit(limit);
+    }
+
+    static where(attribute: string, value: string) {
+        return new CustomBuilder(this).where(attribute, value);
+    }
+
+    static orderBy(attribute: string, direction?: string) {
+        return new CustomBuilder(this).orderBy(attribute, direction);
+    }
+
+    static option(queryParameter: string, value: any) {
+        return new CustomBuilder(this).option(queryParameter, value);
+    }*/
 }

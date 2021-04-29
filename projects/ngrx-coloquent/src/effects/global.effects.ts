@@ -1,18 +1,19 @@
 import { HttpResponse } from "@angular/common/http";
 import { Injectable, InjectionToken, Injector } from "@angular/core";
-import { Model } from "@herlinus/coloquent";
 import { Actions, createEffect, ofType } from "@ngrx/effects";
 import { Store } from "@ngrx/store";
 import { TypedAction } from "@ngrx/store/src/models";
 import { EMPTY } from "rxjs";
 
-import { catchError, concatMap, first, map, mergeMap } from "rxjs/operators";
+import { catchError, concatMap, first, map, mergeMap, withLatestFrom } from "rxjs/operators";
 import { reducerProxyEntities, reducerProxyEntity } from "../variables/variable.actions";
 import { NGRX_COLOQUENT_ENTITY_KEY } from "../reducers/config";
 import { reducerSetMany, reducersSetOne, reducerRemoveOne, reducersSetRelation } from "../reducers/global-reducers.actions";
 import { EffectService } from "./effects.service";
 import { notifyErrorAction } from "./errors";
 import { effectsDeleteOne, EffectsDeleteOneProps, effectsExecuteCallback, effectsGetOne, EffectsGetOneProps, effectsLoadMany, EffectsLoadManyProps, effectsLoadOne, EffectsLoadOneProps, effectsLoadRelation, EffectsLoadRelationProps, effectsSave, EffectsSaveProps } from "./global-effects.actions";
+import { getObjectReducer } from "../reducers/global.reducer";
+import { Model } from "../models/models";
 
 export interface NgrxColoquentGlobalEffectsPostprocessesInterface {
     getOne?: (data: Model, response: HttpResponse<any> | null) => Model;
@@ -39,6 +40,8 @@ export const NGRX_COLOQUENT_GLOBAL_EFFECTS_PREPROCESSES = new InjectionToken<Ngr
 export class GlobalEffects {
     protected postprocesses: NgrxColoquentGlobalEffectsPostprocessesInterface[] = [];
     protected preprocesses: NgrxColoquentGlobalEffectsPreprocessesInterface[] = [];
+
+    stateSelector = (state) => state[NGRX_COLOQUENT_ENTITY_KEY];
 
     postprocessExecutor = {
         default: (postprocess, key: string, data: any) => {
@@ -155,14 +158,16 @@ export class GlobalEffects {
         () => {
             return this.actions$.pipe(
                 ofType(effectsLoadOne),
+                withLatestFrom(this.store.select(this.stateSelector)),
                 mergeMap(
-                    action => {
+                    ([action, state]) => {
                         action = this.executePreprocesses('loadOne', action);
                         return this.service.loadOne(action.entityType, action.queryId, action.with)
                             .pipe(
                                 map(
                                     (queryResult: any) => {
                                         let value = queryResult.result;
+                                        value = getObjectReducer(value, state);
                                         if (value) {
                                             const d = this.executePostprocesses('loadOne', { model: value, response: queryResult.response.httpResponse });
                                             value = d.model;
@@ -187,13 +192,17 @@ export class GlobalEffects {
     loadMany$ = createEffect(
         () => this.actions$.pipe(
                 ofType(effectsLoadMany),
+                withLatestFrom(this.store.select(this.stateSelector)),
                 mergeMap(
-                    (action) => {
+                    ([action, state]) => {
                         action = this.executePreprocesses('loadMany', action);
                         return this.service.loadMany(action.query, action.page).pipe(
                             map(
                                 (queryResult: any) => {
                                     let data = queryResult.result;
+                                    data = data.map(
+                                        (val) => getObjectReducer(val, state)
+                                    );
                                     const d = this.executePostprocesses('loadMany', { model: data, response: queryResult.response.httpResponse });
                                     data = d.model;
                                     this.executeParameters(action, data, true);
@@ -213,13 +222,15 @@ export class GlobalEffects {
     saveOne$ = createEffect(
         () => this.actions$.pipe(
             ofType(effectsSave),
+            withLatestFrom(this.store.select(this.stateSelector)),
             concatMap(
-                (action) => {
+                ([action, state]) => {
                     action = this.executePreprocesses('saveOne', action);
                     return this.service.saveOne(action.data).pipe(
                         map(
                             (commandResult: any) => {
                                 let value = commandResult.result;
+                                value = getObjectReducer(value, state);
                                 const d = this.executePostprocesses('saveOne', { model: value, response: commandResult.response.httpResponse });
                                 value = d.model;
                                 this.executeParameters(action, value, true);
@@ -255,13 +266,19 @@ export class GlobalEffects {
     loadRelation$ = createEffect(
         () => this.actions$.pipe(
             ofType(effectsLoadRelation),
+            withLatestFrom(this.store.select(this.stateSelector)),
             mergeMap(
-                (action) => {
+                ([action, state]) => {
                     action = this.executePreprocesses('loadRelation', action);
                     this.service.loadRelation(action.data, action.relationName).pipe(
                         catchError(this.sendError('error', action))
                     ).subscribe(
                         (data: any) => {
+                            if (Array.isArray(data.result)) {
+                                data.result = data.result.map((val) => getObjectReducer(val, state));
+                            } else {
+                                if (data.result) data.result = getObjectReducer(data.result, state);
+                            }
                             const d = this.executePostprocesses('loadRelation', { model: data.result, parent: action.data, response: data.response.httpResponse });
                             this.executeParameters(action, d.model, true);
                             if (action.parameters.variableName) {

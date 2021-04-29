@@ -9,6 +9,7 @@ export abstract class BaseEntityProxy {
 export class EntityProxy implements BaseEntityProxy {
     jsonApiBaseType: string;
     entityId:   string | number;
+    isEntityProxy = true;
 
     constructor(payload: Model | undefined | null) {
         if (payload) {
@@ -28,6 +29,7 @@ export class EntityProxy implements BaseEntityProxy {
 
 export class MultipleEntityProxy {
     proxies: EntityProxy[];
+    isEntityProxy = true;
 
     constructor(payloads: Model[]) {
         this.proxies = payloads.map((value: Model) => new EntityProxy(value)).filter(value => value ? true : false);

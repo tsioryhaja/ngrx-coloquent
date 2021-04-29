@@ -16,13 +16,15 @@ export class StartPromise {
     successFunction: any[] = [];
     errorFunction: any[] = [];
     startedFunction: any = null;
+    variableName: string = null;
     startFunction() {
         const that = this;
         /*this.startedFunction = setTimeout(
             () => {*/
         const parameters: EntityActionParameters = {
             onSuccess: this.executeFunction(this.successFunction),
-            onFailure: this.executeFunction(this.errorFunction)
+            onFailure: this.executeFunction(this.errorFunction),
+            variableName: this.variableName && this.variableName !== '' ? this.variableName : null
         };
         that.startMethod(parameters);
             /*},
@@ -59,6 +61,11 @@ export class StartPromise {
             this.startedFunction = null;
         } 
         this.startFunction();*/
+        return this;
+    }
+
+    inVariable(variableName: string) {
+        this.variableName = variableName;
         return this;
     }
 }

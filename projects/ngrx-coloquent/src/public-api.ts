@@ -12,6 +12,7 @@ export * from './lib/ngrx-coloquent.module';
 export * from './models/exceptions';
 export * from './models/models';
 export * from './models/query-builder';
+export * from './models/custom-builder';
 export * from './ngrx/base.entity.actions';
 export * from './ngrx/base.entity.class';
 export * from './ngrx/base.entity.effects';

@@ -51,14 +51,26 @@ function populateRelationOne(state: GlobalEntityState, baseData: Model, relation
     baseData.setRelation(relationName, relation);
 }
 
-function oneReducer(data: Model, state: GlobalEntityState): GlobalEntityState {
-    const jsonapiType = data.getJsonApiBaseType();
-    let objectState = state[jsonapiType];
-    objectState = objectState ? objectState : GlobalEntityAdapter.getInitialState();
+export function getObjectReducer(data: Model, state: GlobalEntityState) {
+    const objectState = getStateBase(data, state);
     let payload = objectState.entities[data.getApiId()];
     payload = payload ? payload : data;
     payload = repopulateAttributes(payload, data);
     payload = repopulateRelations(payload, data, state);
+    return payload;
+}
+
+function getStateBase(data: Model, state: GlobalEntityState) {
+    const jsonapiType = data.getJsonApiBaseType();
+    let objectState = state[jsonapiType];
+    objectState = objectState ? objectState : GlobalEntityAdapter.getInitialState();
+    return objectState;
+}
+
+function oneReducer(data: Model, state: GlobalEntityState): GlobalEntityState {
+    const jsonapiType = data.getJsonApiBaseType();
+    let objectState = getStateBase(data, state);
+    const payload = getObjectReducer(data, state);
     objectState = GlobalEntityAdapter.setOne(payload, objectState);
     state[jsonapiType] = objectState;
     return { ...state };

@@ -1,9 +1,10 @@
 import { Injectable } from "@angular/core";
 import { Model } from "@herlinus/coloquent";
 import { Store } from "@ngrx/store";
+import { combineLatest } from "rxjs";
+import { map } from "rxjs/operators";
 import { NGRX_COLOQUENT_ENTITY_KEY } from "../reducers/config";
 import { NGRX_COLOQUENT_VARIABLE_KEY } from "./config";
-import { EntityProxy, MultipleEntityProxy } from "./entity-proxy.class";
 import { reducerProxyEntities, reducerProxyEntity, reducerSetVariable } from "./variable.actions";
 import { VariableState } from "./variable.reducer";
 
@@ -31,13 +32,20 @@ export class GlobalVariableService {
     }
 
     getProxiedVariable(variableName: string) {
-        return this.store.select((state: any) => {
-            const st = state[NGRX_COLOQUENT_VARIABLE_KEY];
-            if (!st[variableName] || !(st[variableName] instanceof EntityProxy) || !(st[variableName] instanceof MultipleEntityProxy)) {
-                return null;
-            } else {
-                return st[variableName].getValue(state[NGRX_COLOQUENT_ENTITY_KEY]);
-            }
-        });
+        return combineLatest([
+            this.store.select(state => state[NGRX_COLOQUENT_ENTITY_KEY]),
+            this.store.select(state => state[NGRX_COLOQUENT_VARIABLE_KEY])
+        ]).pipe(
+            map(
+                ([entities, variables]) => {
+                    let st = variables;
+                    if (!st[variableName] && !st[variableName].isEntityProxy) {
+                        return null;
+                    } else {
+                        return st[variableName].getValue(entities);
+                    }
+                }
+            )
+        );
     }
 }
