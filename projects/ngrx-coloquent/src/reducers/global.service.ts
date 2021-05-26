@@ -16,7 +16,7 @@ export interface EffectsStartActionInterface {
 
 function filterByEntity(state: any, entityTypes: string[]) {
     const arrays = Object.entries(state).filter(
-        ([key, value]: [string, any]) =>  entityTypes.indexOf(value.getJsonApiType())
+        ([key, value]: [string, any]) =>  entityTypes.indexOf(value.getJsonApiType()) >= 0
     );
     const result = {};
     for (const [rowKey, rowValue] of arrays) {

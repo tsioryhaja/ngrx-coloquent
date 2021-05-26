@@ -26,26 +26,29 @@ export class GlobalVariableService {
 
     getVariable(variableName: string) {
         return this.store.select(
-            (state: any) => state[NGRX_COLOQUENT_VARIABLE_KEY],
-            (state: VariableState) => state[variableName]
+            (state: any) => {
+                const st = state[NGRX_COLOQUENT_VARIABLE_KEY];
+                if (st) {
+                    return st[variableName];
+                } else {
+                    return null;
+                }
+            }
         );
     }
 
     getProxiedVariable(variableName: string) {
-        return combineLatest([
-            this.store.select(state => state[NGRX_COLOQUENT_ENTITY_KEY]),
-            this.store.select(state => state[NGRX_COLOQUENT_VARIABLE_KEY])
-        ]).pipe(
-            map(
-                ([entities, variables]) => {
-                    let st = variables;
-                    if (!st[variableName] && !st[variableName].isEntityProxy) {
-                        return null;
+        return this.store.select(
+            (state: any) => {
+                if (state[NGRX_COLOQUENT_VARIABLE_KEY]) {
+                    const st = state[NGRX_COLOQUENT_VARIABLE_KEY];
+                    if (st[variableName] && st[variableName].isEntityProxy) {
+                        return st[variableName].getValue(state[NGRX_COLOQUENT_ENTITY_KEY]);
                     } else {
-                        return st[variableName].getValue(entities);
+                        return;
                     }
                 }
-            )
+            }
         );
     }
 }

@@ -2,7 +2,7 @@ import { HttpClient, Model as Model_, PaginationStrategy, PluralResponse, Singul
 import { PolymorphicEntry, PolymorphicMapping } from '@herlinus/coloquent/dist/PolymorphicModel';
 import { Builder } from '@herlinus/coloquent';
 import { EntityActionParameters } from '../ngrx/base.entity.class';
-import { AngularHttpClient } from '../http-client/class';
+import { AngularHttpClient } from './http-client/class';
 import { NoServiceException } from './exceptions';
 import { Observable } from 'rxjs';
 import { QueryBuilder, StartPromise } from './query-builder';
@@ -242,8 +242,11 @@ export abstract class Model extends Model_ {
                 }
                 that.ngrxColoquentService.updateNextKeys(key, data.length, that);
             }
-            const [query, page] = that.ngrxColoquentService.getLoadNextQuery(that, _parameters, key);
-            that.loadMany$(query.getBuilder(), page, parameters);
+            const _loadNext: Array<any> | null = that.ngrxColoquentService.getLoadNextQuery(that, _parameters, key)
+            if (_loadNext) {
+                const [query, page] = _loadNext;
+                that.loadMany$(query.getBuilder(), page, parameters);
+            }
         });
     }
 

@@ -89,7 +89,6 @@ export class GlobalEffects {
 
     executeParameters(action, data, isSuccess) {
         if (!isSuccess) {
-            console.log('is not success');
             this.store.dispatch(notifyErrorAction({ origin: action, error: data }));
         }
         if (!action.parameters) {

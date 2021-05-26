@@ -2,7 +2,7 @@ import { HttpClient, HttpClientModule } from "@angular/common/http";
 import { NgModule } from "@angular/core";
 import { EffectsModule } from "@ngrx/effects";
 import { Store, StoreModule } from "@ngrx/store";
-import { AngularHttpClient } from "../http-client/class";
+import { AngularHttpClient } from "../models/http-client/class";
 import { Entities, Model } from "../models/models";
 import { EffectService } from "../effects/effects.service";
 import { GlobalEffects } from "../effects/global.effects";

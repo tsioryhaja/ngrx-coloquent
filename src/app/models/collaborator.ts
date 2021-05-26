@@ -1,4 +1,4 @@
-import { toOneRelation } from "@herlinus/coloquent";
+import { Attribut, toOneRelation } from "@herlinus/coloquent";
 import { Entities, Model } from "projects/ngrx-coloquent/src/models/models";
 
 @Entities.hasReducer()
@@ -38,8 +38,11 @@ export class Collaborator extends Person {
     }
 }
 
+@Entities.hasReducer()
 export class ClientContent extends Model {
     protected jsonApiType = 'ClientContent';
+
+    @Attribut() client_id: number | string;
 
     @toOneRelation(() => Person) person;
 

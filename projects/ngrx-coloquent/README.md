@@ -42,8 +42,9 @@ A simple entity is a class you create that describe your model. It extends the c
 For example:
 
 ```javascript
-import { Model } from 'ngrx-coloquent';
+import { Model, Entities } from 'ngrx-coloquent';
 
+@Entities.hasReducer()
 class Person extends Model {
     protected jsonApiType = 'Person';
 
@@ -96,6 +97,7 @@ identity.save$().start();
 For polymorphism, you just need to manage some inheritance for all model. And you also need to add some decorators.
 
 ```javascript
+@Entities.hasReducer()
 class Identity extends Model {
     protected jsonApiType = 'Identity';
 
@@ -154,6 +156,7 @@ You need to wisely choose which entity model to use to select entities from poly
 Lets consider these three models.
 
 ```javascript
+@Entities.hasReducer()
 class Identity extends Model {
     protected jsonApiType = 'Identity';
 
@@ -168,9 +171,9 @@ class Person extends Identity {
 
 }
 
-@Identity.appendPolymorph('Comapny')
+@Identity.appendPolymorph('Company')
 class Company extends Identity {
-    protected jsonApiType = 'Comapny';
+    protected jsonApiType = 'Company';
 
     @Attribut() title: string;
 }
@@ -193,5 +196,21 @@ Identity.selectEntity$(
 // you will get all Person
 Person.selectEntity$(
     (state) => Object.values(state)
+);
+```
+
+NgrxColoquent has also a "loadNext" method that allow you to do a continious load of data and not managing it with pagination.
+The load next is identified by a key so that when you change key, you get a new loadNext.
+
+For example:
+```javascript
+Person.loadNext(
+    'test',
+    [
+        {
+            key: 'where',
+            value: ['client_id', 500201]
+        }
+    ]
 );
 ```
