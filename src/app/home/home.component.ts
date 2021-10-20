@@ -2,7 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { GlobalEntityService, GlobalVariableService } from 'projects/ngrx-coloquent/src/public-api';
 import { BehaviorSubject, Subject } from 'rxjs';
 import { Observable } from 'rxjs';
-import { ClientContent, Collaborator, Identity, Person, Dossier } from '../models/collaborator';
+import { first } from 'rxjs/operators';
+import { ClientContent, Collaborator, Identity, Person, Dossier, NamedRule, StatementClientBinding, InputControl, Sound } from '../models/collaborator';
 
 @Component({
   selector: 'app-home',
@@ -38,11 +39,69 @@ export class HomeComponent implements OnInit {
       this.context
     ]
   );
+
+  inputControl: Observable<InputControl> = InputControl.selectEntity$(
+    (state) => {
+      return state[75];
+    }
+  );
   
   constructor(private variable: GlobalVariableService) {}
 
   ngOnInit(): void {
-    console.log(Object.getPrototypeOf(Identity));
+    /*NamedRule.find$(239).inVariable('test').start();
+    this.variable.getProxiedVariable('test').subscribe(
+      (d) => {
+        if (d) {
+          const st = new StatementClientBinding();
+          st.setRelation('named_rule', d);
+          st.assignment_id = 500057;
+          st.named_rule_id = 239;
+          st.active = 1;
+          st.execution_context = 'agenda';
+          st.save$().onSuccess(
+            (_d) => {
+              console.log(_d);
+            }
+          ).start();
+        }
+      }
+    );*/
+    //InputControl.query$().where('context_id', '500314').get().start();
+    /*Sound.query$().get().onSuccess(
+      (d, resp) => {
+        console.log(d);
+        console.log(resp);
+      }
+    ).start();*/
+    /*Sound.query().where('client_id', '500000').get()
+      .then(
+        (r) => {
+          console.log(r);
+        }
+      );
+      /*Sound.find(2).then(
+        (a) => {
+          console.log(a);
+        }
+      );*/
+      Sound.query().where('client_id', '500000').first().then(
+        (r) => {
+          console.log(r);
+        }
+      );
+
+    /*NamedRule.find$(125).inVariable('test').start();
+    this.variable.getProxiedVariable('test').subscribe(
+      (d) => {
+        console.log(d);
+        if (d) {
+          console.log(d);
+          d.delete$().start();
+        }
+      }
+    );*/
+    /*console.log(Object.getPrototypeOf(Identity));
     console.log(Person.getModelKeys());
 
     this.context.subscribe(
@@ -109,7 +168,24 @@ export class HomeComponent implements OnInit {
   }
 
   loadNewFolder() {
-    Dossier.find$(500092).inVariable('context').start();
+    Dossier.find$(500314).inVariable('context').start();
+  }
+
+  reloadInputControl() {
+    InputControl.query$()
+      .where('context_id', '500314')
+      .with('client_contents')
+      .get().start();
+  }
+
+  testSave() {
+    this.context.pipe(first()).subscribe(
+      (d) => {
+        d.NomDossier = d.NomDossier.replace('_DEV', '_DEV_');
+        console.log(d.isDirty());
+        d.save$().onSuccess(() => { console.log('save fait'); }).start();
+      }
+    );
   }
 
 }

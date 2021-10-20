@@ -24,9 +24,10 @@ function repopulateAttributes(baseData: Model, payload: Model) {
     return baseData;
 }
 
-function repopulateRelations(baseData: Model, payload: Model, state: GlobalEntityState) {
+function repopulateRelations(baseData: Model, payload: Model, state: GlobalEntityState, relationships?: string[]) {
     const relations = payload.getRelations();
-    for (const relationName of Object.keys(relations)) {
+    const changedRelations = relationships ? relationships : payload.getChangedRelations();
+    for (const relationName of changedRelations) {
         const relation = payload.getRelation(relationName);
         if (relation) {
             if (Array.isArray(relation)) {
@@ -51,12 +52,12 @@ function populateRelationOne(state: GlobalEntityState, baseData: Model, relation
     baseData.setRelation(relationName, relation);
 }
 
-export function getObjectReducer(data: Model, state: GlobalEntityState) {
+export function getObjectReducer(data: Model, state: GlobalEntityState, relationships?: string[]) {
     const objectState = getStateBase(data, state);
     let payload = objectState.entities[data.getApiId()];
     payload = payload ? payload : data;
     payload = repopulateAttributes(payload, data);
-    payload = repopulateRelations(payload, data, state);
+    payload = repopulateRelations(payload, data, state, relationships);
     return payload;
 }
 
@@ -111,7 +112,16 @@ function removeOneReducer(data: Model, state: GlobalEntityState): GlobalEntitySt
 function getObjectFromStore(state: GlobalEntityState, obj: Model) {
     const baseType = obj.getJsonApiBaseType();
     const o = state[baseType].entities[obj.getApiId()];
-    return o || obj;
+    if (o) {
+        return o;
+    }
+    else {
+        const jsonapiType = obj.getJsonApiBaseType();
+        let objectState = getStateBase(obj, state);
+        objectState = GlobalEntityAdapter.setOne(obj, objectState);
+        state[jsonapiType] = objectState;
+        return obj
+    }
 }
 
 function firstInitReducer(entityStateKeys: string[], state: GlobalEntityState): GlobalEntityState {

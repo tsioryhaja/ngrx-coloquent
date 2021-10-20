@@ -1,11 +1,12 @@
 import { Builder, SortDirection } from "@herlinus/coloquent";
 import { EntityActionParameters } from "../ngrx/base.entity.class";
+import { AngularBuilder } from "./query/builder";
 
 
 function _executeFuntion (data: any, functionList: any[] = []) {
     if (functionList.length) {
         for (const func of functionList) {
-            const tempData = func(data);
+            const tempData = func(data[0], data[1]);
             data = tempData ? tempData : data;
         }
     }
@@ -33,8 +34,8 @@ export class StartPromise {
     }
 
     executeFunction(functionList) {
-        return (data: any) => {
-            _executeFuntion(data, functionList);
+        return (data: any, response: any) => {
+            _executeFuntion([data, response], functionList);
         }
     }
 
@@ -73,6 +74,7 @@ export class StartPromise {
 export class QueryBuilder {
     customForceSingular: boolean;
     builder: Builder;
+    customUrl: string;
 
     constructor(
         public modelType: any,
@@ -82,13 +84,34 @@ export class QueryBuilder {
         forceSingular: boolean = false
     ) {
         this.customForceSingular = forceSingular;
-        this.builder = new Builder(
+        this.builder = new AngularBuilder(
             modelType,
             queriedRelationName,
             baseModelJsonApiType,
             baseModelJsonApiId,
             forceSingular
         );
+    }
+
+    setCustomUrl(url: string) {
+        this.customUrl = url;
+        this.builder = this.fromBuilder(this.builder);
+    }
+
+    fromBuilder(builder: Builder): AngularBuilder {
+        const newB = new AngularBuilder(
+            this.modelType,
+            builder.getQuery().getQueriedRelationName(),
+            builder.getQuery().getJsonApiType(),
+            builder.getQuery().getJsonApiId(),
+        );
+
+        if (this.customUrl) {
+            newB.customUrl = this.customUrl;
+        }
+
+        newB.setQuery(builder.getQuery());
+        return newB;
     }
 
     getBuilder() {
@@ -106,6 +129,10 @@ export class QueryBuilder {
 
     loadMany$(page: number = 1, parameters: EntityActionParameters = {}, includedRelationships: string[] = []) {
         this.modelType.loadMany$(this.builder, page, parameters, includedRelationships);
+    }
+
+    findOne$(id: number | string, parameters: EntityActionParameters = {}) {
+        this.modelType.findOne$(id, this.builder, parameters);
     }
 
     limit(limit: number): QueryBuilder {
@@ -138,6 +165,13 @@ export class QueryBuilder {
         return new StartPromise((parameters: EntityActionParameters) => {
             that.loadMany$(page, parameters, includedRelationships);
         });
+    }
+
+    find(id): StartPromise {
+        const that = this;
+        return new StartPromise((parameters: EntityActionParameters) => {
+            that.findOne$(id, parameters);
+        })
     }
 
     first(includedRelationships: string[] = []) {

@@ -50,7 +50,7 @@ export class EffectService {
     ) {
         return new Observable(
             (subscriber) => {
-                query.get(page).then(
+                query.__get(page).then(
                     (data: any) => {
                         const result = data.getData();
                         const response = data.getHttpClientResponse();
@@ -63,6 +63,33 @@ export class EffectService {
                     }
                 ).catch(
                     (error: any) => {
+                        subscriber.error(error);
+                        subscriber.complete();
+                    }
+                );
+            }
+        );
+    }
+
+    findOne(
+        query: any,
+        id: any
+    ) {
+        return new Observable(
+            (subscriber) => {
+                query.__find(id).then(
+                    (data) => {
+                        const result = data.getData();
+                        const response = data.getHttpClientResponse();
+                        subscriber.next({result, response});
+                        subscriber.complete();
+                    },
+                    (error) => {
+                        subscriber.error(error);
+                        subscriber.complete();
+                    }
+                ).catch(
+                    error => {
                         subscriber.error(error);
                         subscriber.complete();
                     }

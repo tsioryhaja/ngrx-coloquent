@@ -1,3 +1,9 @@
-<button (click)="loadNewFolder()">Load new fiolder</button>
+<button (click)="loadNewFolder()">Load new fiolder</button><button (click)="testSave()">Test save</button>
 
 {{ clientContent | async }}
+
+<br/>
+<button (click)="reloadInputControl()">Reload Input control</button>
+<br/>
+
+{{ (inputControl | async)?.getRelation('client_contents') | json }}

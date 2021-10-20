@@ -11,7 +11,7 @@ import { NGRX_COLOQUENT_ENTITY_KEY } from "../reducers/config";
 import { reducerSetMany, reducersSetOne, reducerRemoveOne, reducersSetRelation } from "../reducers/global-reducers.actions";
 import { EffectService } from "./effects.service";
 import { notifyErrorAction } from "./errors";
-import { effectsDeleteOne, EffectsDeleteOneProps, effectsExecuteCallback, effectsGetOne, EffectsGetOneProps, effectsLoadMany, EffectsLoadManyProps, effectsLoadOne, EffectsLoadOneProps, effectsLoadRelation, EffectsLoadRelationProps, effectsSave, EffectsSaveProps } from "./global-effects.actions";
+import { effectsDeleteOne, EffectsDeleteOneProps, effectsExecuteCallback, effectsGetOne, effectsFindOne, EffectsGetOneProps, effectsLoadMany, EffectsLoadManyProps, effectsLoadOne, EffectsLoadOneProps, effectsLoadRelation, EffectsLoadRelationProps, effectsSave, EffectsSaveProps } from "./global-effects.actions";
 import { getObjectReducer } from "../reducers/global.reducer";
 import { Model } from "../models/models";
 
@@ -98,7 +98,8 @@ export class GlobalEffects {
           ? action.parameters.onSuccess
           : action.parameters.onFailure;
         if (callback) {
-            this.store.dispatch(effectsExecuteCallback({data, callback}));
+            console.log(data);
+            this.store.dispatch(effectsExecuteCallback({data: data.model, callback, response: data.response}));
         }
     }
 
@@ -200,11 +201,11 @@ export class GlobalEffects {
                                 (queryResult: any) => {
                                     let data = queryResult.result;
                                     data = data.map(
-                                        (val) => getObjectReducer(val, state)
+                                        (val) => getObjectReducer(val, state, action.query.getQuery().getInclude())
                                     );
                                     const d = this.executePostprocesses('loadMany', { model: data, response: queryResult.response.httpResponse });
                                     data = d.model;
-                                    this.executeParameters(action, data, true);
+                                    this.executeParameters(action, {model: data, response: queryResult.response}, true);
                                     if (action.parameters.variableName) {
                                         this.store.dispatch(reducerProxyEntities({ payloads: data, variableName: action.parameters.variableName }));
                                     }
@@ -218,18 +219,59 @@ export class GlobalEffects {
             )
     );
 
+    findOne$ = createEffect(
+        () => this.actions$.pipe(
+            ofType(effectsFindOne),
+            withLatestFrom(this.store.select(this.stateSelector)),
+            mergeMap(
+                ([action, state]) => {
+                    action = this.executePreprocesses('loadOne', action);
+                    console.log('find one');
+                    return this.service.findOne(action.query, action.id).pipe(
+                        map(
+                            (queryResult: any) => {
+                                let data = queryResult.result;
+                                data = getObjectReducer(data, state, action.query.getQuery().getInclude())
+                                const d = this.executePostprocesses('loadOne', { model: data, response: queryResult.response.httpResponse });
+                                data = d.model;
+                                this.executeParameters(action, {model: data, response: queryResult.response}, true);
+                                if (action.parameters.variableName) {
+                                    this.store.dispatch(reducerProxyEntities({ payloads: data, variableName: action.parameters.variableName }));
+                                }
+                                return reducersSetOne({payload: data});
+                            }
+                        ),
+                        catchError(this.sendError('error', action))
+                    );
+                }
+            )
+        )
+    );
+
     saveOne$ = createEffect(
         () => this.actions$.pipe(
             ofType(effectsSave),
             withLatestFrom(this.store.select(this.stateSelector)),
             concatMap(
                 ([action, state]) => {
+                    const isNew: boolean = action.data.getApiId() ? false : true;
                     action = this.executePreprocesses('saveOne', action);
+                    const isDirty = action.data.isDirty();
+                    if(!isDirty) {
+                        const d = this.executePostprocesses('saveOne', { model: action.data, response: null });
+                        this.executeParameters(action, action.data, true);
+                        return this.service.returnEmpty();
+                    }
                     return this.service.saveOne(action.data).pipe(
                         map(
                             (commandResult: any) => {
                                 let value = commandResult.result;
-                                value = getObjectReducer(value, state);
+                                if (isNew) {
+                                    action.data.setApiId(value.getApiId());
+                                    value = action.data;
+                                } else {
+                                    value = getObjectReducer(value, state);
+                                }
                                 const d = this.executePostprocesses('saveOne', { model: value, response: commandResult.response.httpResponse });
                                 value = d.model;
                                 this.executeParameters(action, value, true);
@@ -251,9 +293,11 @@ export class GlobalEffects {
             ofType(effectsExecuteCallback),
             mergeMap(
                 (action: any) => {
-                    const [callback, data] = [action.callback, action.data];
+                    const [callback, data, response] = [action.callback, action.data, action.response];
                     setTimeout(
-                        () => callback(data),
+                        () => {
+                            callback(data, response);
+                        },
                         20
                     );
                     return this.service.returnEmpty()

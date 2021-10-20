@@ -4,14 +4,14 @@ import { Action, Store } from "@ngrx/store";
 import { combineLatest, Observable } from "rxjs";
 import { map } from "rxjs/operators";
 import { EntityActionParameters } from "../ngrx/base.entity.class";
-import { effectsDeleteOne, effectsGetOne, effectsLoadMany, effectsLoadOne, effectsLoadRelation, effectsSave } from "../effects/global-effects.actions";
+import { effectsDeleteOne, effectsGetOne, effectsLoadMany, effectsLoadOne, effectsLoadRelation, effectsSave, effectsFindOne } from "../effects/global-effects.actions";
 import { NGRX_COLOQUENT_ENTITY_KEY } from "./config";
 import { Model } from "../models/models";
 import { reducersSetOne } from "./global-reducers.actions";
 
 
 export interface EffectsStartActionInterface {
-    effectsGetOne?: any, effectsLoadOne?: any, effectsLoadMany?: any, effectsLoadRelation?: any, effectsDeleteOne?: any, effectsSave?: any
+    effectsGetOne?: any, effectsLoadOne?: any, effectsLoadMany?: any, effectsLoadRelation?: any, effectsDeleteOne?: any, effectsSave?: any, effectsFindOne?: any
 }
 
 function filterByEntity(state: any, entityTypes: string[]) {
@@ -31,7 +31,8 @@ export const DefaultEffectsStartAction: EffectsStartActionInterface = {
     effectsLoadMany,
     effectsLoadRelation,
     effectsSave,
-    effectsDeleteOne
+    effectsDeleteOne,
+    effectsFindOne,
 };
 
 export const NGRX_COLOQUENT_EFFECTS_START_ACTIONS = new InjectionToken<EffectsStartActionInterface>('NGRX_COLOQUENT_EFFECTS_START_ACTIONS');
@@ -62,6 +63,16 @@ export class GlobalEntityService {
         this.store.dispatch(action(data));
     }
 
+    findOne$(id: number | string, query: Builder, parameter: EntityActionParameters = {}) {
+        let data = {id, query, parameter};
+        const action = this.effectsStartActions.effectsFindOne || DefaultEffectsStartAction.effectsFindOne;
+        this.store.dispatch(action(data));
+    }
+
+    first$(query: Builder, parameter: EntityActionParameters = {}) {
+        let data = {query, parameter};
+    }
+
     loadMany$(query: Builder, page?: number, parameters: EntityActionParameters = {}, includedRelationships: string[] = []) {
         let data = {query, page, parameters, variableName: parameters.variableName, with: includedRelationships};
         const action = this.effectsStartActions.effectsLoadMany || DefaultEffectsStartAction.effectsLoadMany;
@@ -77,13 +88,13 @@ export class GlobalEntityService {
     deleteOne$(model: Model, parameters: EntityActionParameters = {}) {
         let data = {data: model, parameters};
         const action = this.effectsStartActions.effectsDeleteOne || DefaultEffectsStartAction.effectsDeleteOne;
-        this.store.dispatch(this.effectsStartActions.effectsDeleteOne(data));
+        this.store.dispatch(action(data));
     }
 
     saveOne$(model: Model, parameters: EntityActionParameters = {}) {
         let data = {data: model, parameters};
-        const action = this.effectsStartActions.effectsSave;
-        this.store.dispatch(this.effectsStartActions.effectsSave(data));
+        const action = this.effectsStartActions.effectsSave || DefaultEffectsStartAction.effectsSave;
+        this.store.dispatch(action(data));
     }
 
     selectEntity(selectorFunction: Function, entityType: typeof Model, customContentFilter: Observable<any>[] = []) {
@@ -132,6 +143,15 @@ export class GlobalEntityService {
             return [query, this.nextPage[key]];
         } else {
             return null;
+        }
+    }
+
+    resetQueryNext(key: string) {
+        if (this.nextPage[key]) {
+            delete this.nextPage[key];
+        }
+        if (this.lastPage[key]) {
+            delete this.nextPage[key];
         }
     }
 

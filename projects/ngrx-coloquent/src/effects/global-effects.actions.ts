@@ -41,6 +41,29 @@ export const effectsLoadMany = createAction(
     props<EffectsLoadManyProps>()
 );
 
+export interface EffectsFindOneProps {
+    query: Builder;
+    variableName?: string;
+    parameters?: any;
+    id: any;
+}
+
+export const effectsFindOne = createAction(
+    '[JSONAPI/MODEL] FindOne',
+    props<EffectsFindOneProps>()
+);
+
+export interface EffectsFirstProps {
+    query: Builder;
+    variableName?: string;
+    parameters?: any;
+}
+
+export const effectsFirst = createAction(
+    '[JSONAPI/MODEL] FindOne',
+    props<EffectsFirstProps>()
+);
+
 export interface EffectsSaveProps {
     data: any;
     parameters?: any;
@@ -67,7 +90,8 @@ export const effectsExecuteCallback = createAction(
     '[JSONAPI/MODEL] Execute Callback',
     props<{
         data: any,
-        callback: Function
+        response?: any,
+        callback: any
     }>()
 );
 

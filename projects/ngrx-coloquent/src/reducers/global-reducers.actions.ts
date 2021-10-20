@@ -18,7 +18,7 @@ export const reducerSetMany = createAction(
 );
 
 export const reducerRemoveOne = createAction(
-    '[JSONAPI/MODEL] Delete One',
+    '[JSONAPI/MODEL] Remove One',
     props<{ payload: Model }>()
 );
 

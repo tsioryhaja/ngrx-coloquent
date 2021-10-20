@@ -39,21 +39,6 @@ const storeConfig = {
       provide: HTTP_INTERCEPTORS,
       useClass: TokenInterceptor,
       multi: true
-    },
-    {
-      provide: NGRX_COLOQUENT_GLOBAL_EFFECTS_PREPROCESSES,
-      useClass: FirstFilterPreprocessors,
-      multi: true
-    },
-    {
-      provide: NGRX_COLOQUENT_GLOBAL_EFFECTS_POSTPROCESSES,
-      useClass: FirstPostProcessors,
-      multi: true
-    },
-    {
-      provide: NGRX_COLOQUENT_BASE_ERROR,
-      useClass: ErrorInjector,
-      multi: true
     }
   ],
   bootstrap: [AppComponent]

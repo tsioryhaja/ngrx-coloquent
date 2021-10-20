@@ -1,4 +1,4 @@
-import { HttpClient, Model as Model_, PaginationStrategy, PluralResponse, SingularResponse } from '@herlinus/coloquent';
+import { HttpClient, Model as Model_, PaginationStrategy, PluralResponse, SingularResponse, ToManyRelation, ToOneRelation } from '@herlinus/coloquent';
 import { PolymorphicEntry, PolymorphicMapping } from '@herlinus/coloquent/dist/PolymorphicModel';
 import { Builder } from '@herlinus/coloquent';
 import { EntityActionParameters } from '../ngrx/base.entity.class';
@@ -6,6 +6,10 @@ import { AngularHttpClient } from './http-client/class';
 import { NoServiceException } from './exceptions';
 import { Observable } from 'rxjs';
 import { QueryBuilder, StartPromise } from './query-builder';
+import { AngularBuilder } from './query/builder';
+import { Reflection } from '@herlinus/coloquent/dist/util/Reflection';
+import { AngularToManyRelation } from './relation/many';
+import { AngularToOneRelation } from './relation/one';
 
 const NO_SERVICE_ERROR_MESSAGE = "There was no service setted for the entities. Check if you are inside angular execution context or if the NgrxColoquentModule is not imported";
 
@@ -28,6 +32,9 @@ export class Entities {
 class PolymorphicChildren {
 
     private childrendKeys: string[] = [];
+
+    customUrl: any = {};
+    forceCustomUrl: boolean = false;
 
     constructor(private children: any[]) {
         for (const child of children) {
@@ -52,6 +59,8 @@ class PolymorphicChildren {
 // @dynamic
 export abstract class Model extends Model_ {
     protected static paginationStrategy = PaginationStrategy.PageBased;
+    static customUrls: any = {};
+
     static baseUrl: string = null;
 
     static polymorphicOn = null;
@@ -110,7 +119,7 @@ export abstract class Model extends Model_ {
 
     constructor() {
         super();
-        Model._httpClient[this.getJsonApiBaseUrl()] = null;
+        //Model._httpClient[this.getJsonApiBaseUrl()] = null;
     }
 
     static setGlobalHttpClient (httpClient: HttpClient) {
@@ -126,13 +135,15 @@ export abstract class Model extends Model_ {
 
     static get httpClient(): HttpClient {
         let httpClient = this._httpClient[this.getJsonApiBaseUrl()];
-        if (!httpClient && this._httpClient['angular-http-client'] && this._httpClient['angular-http-client'].httpClient) {
-            const newHttpClient = new AngularHttpClient(this._httpClient['angular-http-client'].httpClient);
-            newHttpClient.setBaseUrl(this.getJsonApiBaseUrl());
-            this._httpClient[this.getJsonApiBaseUrl()] = newHttpClient;
-            httpClient = newHttpClient;
-        } else {
-            httpClient = this._httpClient[''];
+        if (!httpClient) {
+            if (this._httpClient['angular-http-client'] && this._httpClient['angular-http-client']['httpClient']) {
+                const newHttpClient = new AngularHttpClient(this._httpClient['angular-http-client']['httpClient']);
+                newHttpClient.setBaseUrl(this.getJsonApiBaseUrl());
+                this._httpClient[this.getJsonApiBaseUrl()] = newHttpClient;
+                httpClient = newHttpClient;
+            } else {
+                httpClient = this._httpClient[''];
+            }
         }
         return httpClient;
     }
@@ -174,6 +185,11 @@ export abstract class Model extends Model_ {
         this.ngrxColoquentService.loadOne$(this, id, parameters, includedRelationships);
     }
 
+    static findOne$(id: number |string, query: Builder, parameter: EntityActionParameters = {}) {
+        if (!this.ngrxColoquentService) throw new NoServiceException(NO_SERVICE_ERROR_MESSAGE);
+        this.ngrxColoquentService.findOne$(id, query, parameter);
+    }
+
     static loadMany$(query: Builder, page: number = 1, parameters: EntityActionParameters = {}, includedRelationships: string[] = []) {
         if (!this.ngrxColoquentService) throw new NoServiceException(NO_SERVICE_ERROR_MESSAGE);
         this.ngrxColoquentService.loadMany$(query, page, parameters, includedRelationships);
@@ -200,7 +216,8 @@ export abstract class Model extends Model_ {
     }
 
     static query$(): QueryBuilder {
-        return new QueryBuilder(this);
+        const q = new QueryBuilder(this);
+        return q;
     }
 
     static find$(id: number |string | any, includedRelationships: string[] = []) {
@@ -246,8 +263,17 @@ export abstract class Model extends Model_ {
             if (_loadNext) {
                 const [query, page] = _loadNext;
                 that.loadMany$(query.getBuilder(), page, parameters);
+            } else {
+                if (callback) {
+                    callback([]);
+                }
             }
         });
+    }
+
+    static resetLoadNextKey(key: string) {
+        if (!this.ngrxColoquentService) throw new NoServiceException(NO_SERVICE_ERROR_MESSAGE);
+        this.ngrxColoquentService.resetQueryNext(key);
     }
 
     static __query() {
@@ -313,4 +339,72 @@ export abstract class Model extends Model_ {
     static option(queryParameter: string, value: any) {
         return new CustomBuilder(this).option(queryParameter, value);
     }*/
+
+    /*public save() {
+        return this.save$();
+    }*/
+
+    public static createAngularBuilder() {
+        const d = new AngularBuilder(this);
+        return d;
+    }
+
+    public static query(): Builder
+    {
+        return this.createAngularBuilder();
+    }
+
+    public static with(attribute: any): Builder
+    {
+        return this.createAngularBuilder()
+            .with(attribute);
+    }
+
+    public static limit(limit: number): Builder
+    {
+        return this.createAngularBuilder()
+            .limit(limit);
+    }
+
+    public static where(attribute: string, value: string): Builder
+    {
+        return this.createAngularBuilder()
+            .where(attribute, value);
+    }
+
+    public static orderBy(attribute: string, direction?: string): Builder
+    {
+        return this.createAngularBuilder()
+            .orderBy(attribute, direction);
+    }
+
+    public static option(queryParameter: string, value: string): Builder
+    {
+        return this.createAngularBuilder()
+            .option(queryParameter, value);
+    }
+
+    public static find(id): Promise<any> {
+        return this.createAngularBuilder().find(id);
+    }
+
+    protected hasMany(relatedType: typeof Model): ToManyRelation;
+    protected hasMany(relatedType: typeof Model, relationName: string): ToManyRelation;
+    protected hasMany(relatedType: typeof Model, relationName?: string): ToManyRelation
+    {
+        if (typeof relationName === 'undefined') {
+            relationName = Reflection.getNameOfNthMethodOffStackTrace(new Error(), 2);
+        }
+        return new AngularToManyRelation(relatedType, this, relationName);
+    }
+
+    protected hasOne(relatedType: typeof Model): ToOneRelation;
+    protected hasOne(relatedType: typeof Model, relationName: string): ToOneRelation;
+    protected hasOne(relatedType: typeof Model, relationName?: string): ToOneRelation
+    {
+        if (typeof relationName === 'undefined') {
+            relationName = Reflection.getNameOfNthMethodOffStackTrace(new Error(), 2);
+        }
+        return new AngularToOneRelation(relatedType, this, relationName);
+    }
 }

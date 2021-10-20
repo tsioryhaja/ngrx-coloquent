@@ -10,7 +10,7 @@ import { NgrxColoquentConfigService } from './config';
 
 export interface EntityActionParameters {
     variableName?: string;
-    onSuccess?: Function;
+    onSuccess?: any;
     onFailure?: Function;
 }
 
