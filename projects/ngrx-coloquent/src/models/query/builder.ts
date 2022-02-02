@@ -39,8 +39,9 @@ export class AngularBuilder extends Builder {
 
         const relationName = this.getQuery().getQueriedRelationName();
         const jsonApiId = this.getQuery().getJsonApiId();
+        const m = new model();
 
-        const customUrlName = model.getJsonApiBaseType() + '.' + baseName + (relationName ? '_' + relationName : '');
+        const customUrlName = m.getJsonApiType() + '.' + baseName + (relationName ? '_' + relationName : '');
 
         if (model.customUrls[customUrlName]) {
             let customUrl = model.customUrls[customUrlName];
@@ -127,11 +128,13 @@ export class AngularBuilder extends Builder {
         }
 
         if (this.customUrl) {
-            console.trace();
-            console.log(this.customUrl);
             query.customUrl = this.customUrl;
         }
 
         return query;
+    }
+
+    getModelType() {
+        return this.modelType;
     }
 }

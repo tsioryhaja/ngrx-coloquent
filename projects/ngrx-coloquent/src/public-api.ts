@@ -33,3 +33,4 @@ export * from './variables/ngrx-global-variable.module';
 export * from './variables/variable.actions';
 export * from './variables/variable.reducer';
 export * from './variables/varialbe-global.service';
+export * from './effects/effect.service.interface';

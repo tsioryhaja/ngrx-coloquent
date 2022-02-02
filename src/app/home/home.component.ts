@@ -3,7 +3,7 @@ import { GlobalEntityService, GlobalVariableService } from 'projects/ngrx-coloqu
 import { BehaviorSubject, Subject } from 'rxjs';
 import { Observable } from 'rxjs';
 import { first } from 'rxjs/operators';
-import { ClientContent, Collaborator, Identity, Person, Dossier, NamedRule, StatementClientBinding, InputControl, Sound } from '../models/collaborator';
+import { ClientContent, Collaborator, Identity, Person, Dossier, NamedRule, StatementClientBinding, InputControl, Sound, Numero, SearchDossier } from '../models/collaborator';
 
 @Component({
   selector: 'app-home',
@@ -42,7 +42,8 @@ export class HomeComponent implements OnInit {
 
   inputControl: Observable<InputControl> = InputControl.selectEntity$(
     (state) => {
-      return state[75];
+      console.log(state);
+      return state[78];
     }
   );
   
@@ -85,11 +86,11 @@ export class HomeComponent implements OnInit {
           console.log(a);
         }
       );*/
-      Sound.query().where('client_id', '500000').first().then(
-        (r) => {
+      /*Sound.query$().where('client_id', '500000').get(1).onSuccess(
+        (d, r) => {
           console.log(r);
         }
-      );
+      ).start();*/
 
     /*NamedRule.find$(125).inVariable('test').start();
     this.variable.getProxiedVariable('test').subscribe(
@@ -165,6 +166,13 @@ export class HomeComponent implements OnInit {
       }
     )
     .start();*/
+    SearchDossier.loadNext('test', []).onSuccess((d) => {
+      console.log(d);
+    }).onError(
+      (e) => {
+        console.error(e);
+      }
+    ).start();
   }
 
   loadNewFolder() {
@@ -174,7 +182,7 @@ export class HomeComponent implements OnInit {
   reloadInputControl() {
     InputControl.query$()
       .where('context_id', '500314')
-      .with('client_contents')
+      //.with('client_contents')
       .get().start();
   }
 
@@ -186,6 +194,47 @@ export class HomeComponent implements OnInit {
         d.save$().onSuccess(() => { console.log('save fait'); }).start();
       }
     );
+  }
+
+  newInputControl() {
+    const i = new InputControl();
+    i.label = 'test1';
+    i.key = 'test1';
+    i.context_id = 500000;
+    i.save$().start();
+  }
+
+  getNumero() {
+    Numero.query$().get().start();
+  }
+
+  testS() {
+    this.inputControl.pipe(first()).subscribe(
+      (inputControl) => {
+        inputControl.label = inputControl.label + 's';
+        inputControl.save$().onSuccess(
+          (d) => {
+            console.log(d);
+          }
+        );
+      }
+    )
+  }
+
+  loadInputControlRelation() {
+    this.inputControl.pipe(first()).subscribe(
+      (d) => {
+        d.loadRelation$('client_contents').start();
+      }
+    )
+  }
+
+  searchSound() {
+    Sound.query$().where('client_id', '500000').get().start();
+  }
+
+  loadNumero() {
+    Numero.query$().get().start();
   }
 
 }

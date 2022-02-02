@@ -1,9 +1,11 @@
 import { Injectable } from "@angular/core";
 import { EMPTY, Observable } from "rxjs";
 import { Model } from "../models/models";
+import { AngularBuilder } from "../models/query/builder";
+import { BaseGlobalEffectService } from "./effect.service.interface";
 
 @Injectable()
-export class EffectService {
+export class EffectService implements BaseGlobalEffectService {
     constructor() {}
 
     returnEmpty(): Observable<any> {
@@ -17,28 +19,21 @@ export class EffectService {
     ) {
         return new Observable(
             (subscriber) => {
-                let query = BaseModel.__query();
+                let query = BaseModel.query$();
                 for (const field of included) {
                     query = query.with(field);
                 }
-
-                query.find(queryId).then(
-                    (data) => {
-                        const result = data.getData();
-                        const response = data.getHttpClientResponse();
+                query.find(queryId).onSuccess(
+                    (result, response) => {
                         subscriber.next({result, response});
                         subscriber.complete();
-                    },
-                    (error) => {
-                        subscriber.error(error);
-                        subscriber.complete();
                     }
-                ).catch(
+                ).onError(
                     error => {
                         subscriber.error(error);
                         subscriber.complete();
                     }
-                );
+                ).start();
             }
         )
     }
@@ -105,7 +100,7 @@ export class EffectService {
                     observer.next(data);
                     observer.complete();
                 }
-                data.save().then(
+                data.__save().then(
                     (value) => {
                         const result = value.getModel();
                         const response = value.getHttpClientResponse();
@@ -129,9 +124,9 @@ export class EffectService {
     loadRelation(data: Model, relationName: string) {
         return new Observable(
             (observer) => {
-                data[relationName].get().then(
+                data[relationName].__get().then(
                     (value) => {
-                        const result = value.getData();
+                        const result = value.getModel();
                         const response = value.getHttpClientResponse();
                         observer.next({result, response});
                         observer.complete();
@@ -153,7 +148,7 @@ export class EffectService {
     deleteOne(data: Model) {
         return new Observable(
             (observer) => {
-                data.delete().then(
+                data.__delete().then(
                     (value) => {
                         observer.next(data);
                         observer.complete();

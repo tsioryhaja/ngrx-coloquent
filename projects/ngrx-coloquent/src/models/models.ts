@@ -1,4 +1,4 @@
-import { HttpClient, Model as Model_, PaginationStrategy, PluralResponse, SingularResponse, ToManyRelation, ToOneRelation } from '@herlinus/coloquent';
+import { HttpClient, Model as Model_, PaginationStrategy, PluralResponse, SaveResponse, SingularResponse, ToManyRelation, ToOneRelation } from '@herlinus/coloquent';
 import { PolymorphicEntry, PolymorphicMapping } from '@herlinus/coloquent/dist/PolymorphicModel';
 import { Builder } from '@herlinus/coloquent';
 import { EntityActionParameters } from '../ngrx/base.entity.class';
@@ -10,6 +10,8 @@ import { AngularBuilder } from './query/builder';
 import { Reflection } from '@herlinus/coloquent/dist/util/Reflection';
 import { AngularToManyRelation } from './relation/many';
 import { AngularToOneRelation } from './relation/one';
+import { InjectionToken, Type } from '@angular/core';
+import { BaseGlobalEffectService } from '../effects/effect.service.interface';
 
 const NO_SERVICE_ERROR_MESSAGE = "There was no service setted for the entities. Check if you are inside angular execution context or if the NgrxColoquentModule is not imported";
 
@@ -59,7 +61,9 @@ class PolymorphicChildren {
 // @dynamic
 export abstract class Model extends Model_ {
     protected static paginationStrategy = PaginationStrategy.PageBased;
-    static customUrls: any = {};
+    public static customUrls: any = {};
+
+    public static serviceInjection: InjectionToken<BaseGlobalEffectService> | undefined | Type<BaseGlobalEffectService> = undefined;
 
     static baseUrl: string = null;
 
@@ -90,6 +94,10 @@ export abstract class Model extends Model_ {
 
     static getPolymorphicChild() {
         return this.polymorphicChild;
+    }
+
+    static getJsonApiType() {
+        return (new (<any> this)).getJsonApiType();
     }
 
     static getModelKeys() {
@@ -190,7 +198,7 @@ export abstract class Model extends Model_ {
         this.ngrxColoquentService.findOne$(id, query, parameter);
     }
 
-    static loadMany$(query: Builder, page: number = 1, parameters: EntityActionParameters = {}, includedRelationships: string[] = []) {
+    static loadMany$(query: AngularBuilder, page: number = 1, parameters: EntityActionParameters = {}, includedRelationships: string[] = []) {
         if (!this.ngrxColoquentService) throw new NoServiceException(NO_SERVICE_ERROR_MESSAGE);
         this.ngrxColoquentService.loadMany$(query, page, parameters, includedRelationships);
     }
@@ -222,9 +230,11 @@ export abstract class Model extends Model_ {
 
     static find$(id: number |string | any, includedRelationships: string[] = []) {
         const that = this;
-        return new StartPromise((parameters: EntityActionParameters) => {
-            that.loadOne$(id, parameters, includedRelationships);
-        });
+        let q = this.query$();
+        if (includedRelationships.length > 0) {
+            q = q.with(includedRelationships);
+        }
+        return q.find(id);
     }
 
     loadRelation$(relationName: string) {
@@ -406,5 +416,134 @@ export abstract class Model extends Model_ {
             relationName = Reflection.getNameOfNthMethodOffStackTrace(new Error(), 2);
         }
         return new AngularToOneRelation(relatedType, this, relationName);
+    }
+
+    __save() {
+        if (!this.getApiId() || this.getApiId() === '') {
+            return this.create();
+        }
+
+
+        const preprocessResult = this.beforeSave();
+        let payload = this.serialize();
+        const customUrlName = this.getJsonApiType() + '.patch';
+        const construct: typeof Model = <typeof Model> this.constructor;
+        let customUrl = this.getJsonApiType()+'/'+this.getApiId();
+        if (construct.customUrls[customUrlName]) {
+            customUrl = construct.customUrls[customUrlName].replace('{id}', this.getApiId());
+        }
+        return this.constructor.httpClient
+            .patch(
+                customUrl,
+                payload,
+                preprocessResult
+            )
+            .then(
+                (response: any) => {
+                    const idFromJson: string | undefined = response.getData().data.id;
+                    this.setApiId(idFromJson);
+                    return new SaveResponse(response, this.constructor, response.getData());
+                },
+                (response: any) => {
+                    throw response;
+                }
+            );
+    }
+
+    create() {
+        const preprocessResult = this.beforeSave();
+        let payload = this.serialize();
+        const customUrlName = this.getJsonApiType() + '.post';
+        const construct: typeof Model = <typeof Model> this.constructor 
+        let customUrl = this.getJsonApiType();
+        if (construct.customUrls[customUrlName]) {
+            customUrl = construct.customUrls[customUrlName].replace('{id}', this.getApiId());
+        }
+        return this.constructor.httpClient
+            .post(
+                customUrl,
+                payload,
+                preprocessResult
+            )
+            .then(
+                (response: any) => {
+                    const idFromJson: string | undefined = response.getData().data.id;
+                    this.setApiId(idFromJson);
+                    return new SaveResponse(response, this.constructor, response.getData());
+                },
+                function (response: any) {
+                    throw response;
+                }
+            );
+    }
+
+    __delete() {
+        if (!this.getApiId()) {
+            throw new Error('Cannot delete a model with no ID.');
+        }
+        const customUrlName = this.getJsonApiType() + '.delete';
+        const construct: typeof Model = <typeof Model> this.constructor 
+        let customUrl = this.getJsonApiType()+'/'+this.getApiId();
+        if (construct.customUrls[customUrlName]) {
+            customUrl = construct.customUrls[customUrlName].replace('{id}', this.getApiId());
+        }
+        return this.constructor.httpClient
+            .delete(customUrl)
+            .then(function () {});
+    }
+
+    save(): Promise<any> {
+        const that = this;
+        return new Promise(
+            (resolve, reject) => {
+                that.save$().onSuccess(
+                    (a, r) => {
+                        resolve(this);
+                    }
+                ).onError(
+                    (err) => {
+                        reject(err);
+                    }
+                )
+                .start();
+            }
+        );
+    }
+
+    delete(): Promise<any> {
+        const that = this;
+        return new Promise(
+            (resolve, reject) => {
+                that.delete$().onSuccess(
+                    (a, r) => {
+                        resolve(this);
+                    }
+                )
+                .onError(
+                    (err) => {
+                        reject(err);
+                    }
+                ).start();
+            }
+        );
+    }
+
+    publicSerialize() {
+        return this.serialize();
+    }
+
+    get postUrl() {
+        return this.getJsonApiBaseUrl() + '/' + this.getJsonApiType();
+    }
+
+    get patchUrl() {
+        return this.getJsonApiBaseUrl() + '/' + this.getJsonApiType();
+    }
+
+    attributeFromModel(newModel: Model) {
+        const serialized: any = newModel.publicSerialize();
+        for (const attr in serialized.data.attributes) {
+            this.setAttribute(attr, serialized.data.attributes[attr]);
+        }
     }
 }

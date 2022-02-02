@@ -162,23 +162,26 @@ export class QueryBuilder {
 
     get(page: number = 1, includedRelationships: string[] = []): StartPromise {
         const that = this;
+        const b: AngularBuilder = <AngularBuilder> this.builder;
         return new StartPromise((parameters: EntityActionParameters) => {
-            that.loadMany$(page, parameters, includedRelationships);
+            b.rebuildBuilder('getMany').loadMany$(page, parameters, includedRelationships);
         });
     }
 
     find(id): StartPromise {
         const that = this;
+        const b: AngularBuilder = <AngularBuilder> this.builder;
         return new StartPromise((parameters: EntityActionParameters) => {
-            that.findOne$(id, parameters);
+            b.rebuildBuilder('getOne').findOne$(id, parameters);
         })
     }
 
     first(includedRelationships: string[] = []) {
         const that = this;
+        const b: AngularBuilder = <AngularBuilder> this.builder;
         return new StartPromise((parameters: EntityActionParameters) => {
             that.builder.getQuery().getPaginationSpec().setPageLimit(1);
-            that.loadMany$(0, parameters, includedRelationships);
+            b.rebuildBuilder('getMany').loadMany$(0, parameters, includedRelationships);
         });
     }
 }

@@ -2,7 +2,7 @@ import { SingularResponse, SortDirection, ToOneRelation } from "@herlinus/coloqu
 import { AngularBuilder } from "../query/builder";
 
 export class AngularToOneRelation extends ToOneRelation {
-    protected createAngularBuilder(isSingular: boolean) {
+    createAngularBuilder(isSingular: boolean) {
         return new AngularBuilder(this.getType(), this.getName(), this.getReferringObject().getJsonApiType(), this.getReferringObject().getApiId(), isSingular);
     }
 

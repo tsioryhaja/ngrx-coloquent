@@ -1,5 +1,5 @@
 import { HttpResponse } from "@angular/common/http";
-import { Injectable, InjectionToken, Injector } from "@angular/core";
+import { Injectable, InjectionToken, Injector, Type } from "@angular/core";
 import { Actions, createEffect, ofType } from "@ngrx/effects";
 import { Store } from "@ngrx/store";
 import { TypedAction } from "@ngrx/store/src/models";
@@ -14,6 +14,8 @@ import { notifyErrorAction } from "./errors";
 import { effectsDeleteOne, EffectsDeleteOneProps, effectsExecuteCallback, effectsGetOne, effectsFindOne, EffectsGetOneProps, effectsLoadMany, EffectsLoadManyProps, effectsLoadOne, EffectsLoadOneProps, effectsLoadRelation, EffectsLoadRelationProps, effectsSave, EffectsSaveProps } from "./global-effects.actions";
 import { getObjectReducer } from "../reducers/global.reducer";
 import { Model } from "../models/models";
+import { AltEffectService } from "./alt.effects.service";
+import { BaseGlobalEffectService, ServicesInterface } from "./effect.service.interface";
 
 export interface NgrxColoquentGlobalEffectsPostprocessesInterface {
     getOne?: (data: Model, response: HttpResponse<any> | null) => Model;
@@ -40,6 +42,8 @@ export const NGRX_COLOQUENT_GLOBAL_EFFECTS_PREPROCESSES = new InjectionToken<Ngr
 export class GlobalEffects {
     protected postprocesses: NgrxColoquentGlobalEffectsPostprocessesInterface[] = [];
     protected preprocesses: NgrxColoquentGlobalEffectsPreprocessesInterface[] = [];
+
+    services: ServicesInterface = {}
 
     stateSelector = (state) => state[NGRX_COLOQUENT_ENTITY_KEY];
 
@@ -87,6 +91,20 @@ export class GlobalEffects {
         return action;
     }
 
+    getService(injectionToken: InjectionToken<BaseGlobalEffectService> | undefined | Type<BaseGlobalEffectService>, modelName: string) {
+        if (!this.services[modelName]) {
+            if (injectionToken) {
+                this.services[modelName] = this.injector.get(injectionToken);
+            }
+            if (this.services[modelName]) {
+                return this.services[modelName];
+            } else {
+                return this.service;
+            }
+        }
+        return this.services[modelName];
+    }
+
     executeParameters(action, data, isSuccess) {
         if (!isSuccess) {
             this.store.dispatch(notifyErrorAction({ origin: action, error: data }));
@@ -98,8 +116,7 @@ export class GlobalEffects {
           ? action.parameters.onSuccess
           : action.parameters.onFailure;
         if (callback) {
-            console.log(data);
-            this.store.dispatch(effectsExecuteCallback({data: data.model, callback, response: data.response}));
+            this.store.dispatch(effectsExecuteCallback({data: isSuccess ? data.model : data, callback, response: data.response}));
         }
     }
 
@@ -137,7 +154,7 @@ export class GlobalEffects {
                                     } else {
                                         const d = this.executePostprocesses('getOne', { model: value, response: null })
                                         value = d.model;
-                                        this.executeParameters(action, value, true);
+                                        this.executeParameters(action, { model: value, response: null }, true);
                                         if (action.parameters.variableName) {
                                             this.store.dispatch(reducerProxyEntity({ payload: value, variableName: action.parameters.variableName }));
                                         }
@@ -162,7 +179,7 @@ export class GlobalEffects {
                 mergeMap(
                     ([action, state]) => {
                         action = this.executePreprocesses('loadOne', action);
-                        return this.service.loadOne(action.entityType, action.queryId, action.with)
+                        return this.getService(action.entityType.serviceInjection, action.entityType.getJsonApiType()).loadOne(action.entityType, action.queryId, action.with)
                             .pipe(
                                 map(
                                     (queryResult: any) => {
@@ -172,7 +189,7 @@ export class GlobalEffects {
                                             const d = this.executePostprocesses('loadOne', { model: value, response: queryResult.response.httpResponse });
                                             value = d.model;
                                         }
-                                        this.executeParameters(action, value, true);
+                                        this.executeParameters(action, { model: value, response: queryResult.response }, true);
                                         if (action.parameters.variableName) {
                                             this.store.dispatch(reducerProxyEntity({ payload: value, variableName: action.parameters.variableName }));
                                         }
@@ -196,7 +213,7 @@ export class GlobalEffects {
                 mergeMap(
                     ([action, state]) => {
                         action = this.executePreprocesses('loadMany', action);
-                        return this.service.loadMany(action.query, action.page).pipe(
+                        return this.getService(action.query['getModelType']().serviceInjection, action.query['getModelType']().getJsonApiType()).loadMany(action.query, action.page).pipe(
                             map(
                                 (queryResult: any) => {
                                     let data = queryResult.result;
@@ -226,8 +243,7 @@ export class GlobalEffects {
             mergeMap(
                 ([action, state]) => {
                     action = this.executePreprocesses('loadOne', action);
-                    console.log('find one');
-                    return this.service.findOne(action.query, action.id).pipe(
+                    return this.getService(action.query['getModelType']().serviceInjection, action.query['getModelType']().getJsonApiType()).findOne(action.query, action.id).pipe(
                         map(
                             (queryResult: any) => {
                                 let data = queryResult.result;
@@ -236,7 +252,7 @@ export class GlobalEffects {
                                 data = d.model;
                                 this.executeParameters(action, {model: data, response: queryResult.response}, true);
                                 if (action.parameters.variableName) {
-                                    this.store.dispatch(reducerProxyEntities({ payloads: data, variableName: action.parameters.variableName }));
+                                    this.store.dispatch(reducerProxyEntity({ payload: data, variableName: action.parameters.variableName }));
                                 }
                                 return reducersSetOne({payload: data});
                             }
@@ -259,10 +275,10 @@ export class GlobalEffects {
                     const isDirty = action.data.isDirty();
                     if(!isDirty) {
                         const d = this.executePostprocesses('saveOne', { model: action.data, response: null });
-                        this.executeParameters(action, action.data, true);
+                        this.executeParameters(action, { model: action.data, response: undefined }, true);
                         return this.service.returnEmpty();
                     }
-                    return this.service.saveOne(action.data).pipe(
+                    return this.getService(action.data.constructor.serviceInjection, action.data.getJsonApiType()).saveOne(action.data).pipe(
                         map(
                             (commandResult: any) => {
                                 let value = commandResult.result;
@@ -274,7 +290,7 @@ export class GlobalEffects {
                                 }
                                 const d = this.executePostprocesses('saveOne', { model: value, response: commandResult.response.httpResponse });
                                 value = d.model;
-                                this.executeParameters(action, value, true);
+                                this.executeParameters(action, { model: value, response: commandResult.response }, true);
                                 if (action.parameters.variableName) {
                                     this.store.dispatch(reducerProxyEntity({ payload: value, variableName: action.parameters.variableName }));
                                 }
@@ -313,7 +329,7 @@ export class GlobalEffects {
             mergeMap(
                 ([action, state]) => {
                     action = this.executePreprocesses('loadRelation', action);
-                    this.service.loadRelation(action.data, action.relationName).pipe(
+                    this.getService(action.data.constructor.serviceInjection, action.data.getJsonApiType()).loadRelation(action.data, action.relationName).pipe(
                         catchError(this.sendError('error', action))
                     ).subscribe(
                         (data: any) => {
@@ -322,12 +338,13 @@ export class GlobalEffects {
                             } else {
                                 if (data.result) data.result = getObjectReducer(data.result, state);
                             }
+                            action.data.setRelation(action.relationName, data.result);
                             const d = this.executePostprocesses('loadRelation', { model: data.result, parent: action.data, response: data.response.httpResponse });
-                            this.executeParameters(action, d.model, true);
+                            this.executeParameters(action, d, true);/*
                             if (action.parameters.variableName) {
                                 this.store.dispatch(reducerProxyEntities({ payloads: d.model, variableName: action.parameters.variableName }));
                             }
-                            this.store.dispatch(reducersSetRelation({ payload: action.data, relation: d.model, relationName: action.relationName }));
+                            this.store.dispatch(reducersSetRelation({ payload: action.data, relation: d.model, relationName: action.relationName }));*/
                         },
                         catchError(this.sendError('error', action))
                     );
@@ -343,12 +360,12 @@ export class GlobalEffects {
             concatMap(
                 (action) => {
                     action = this.executePreprocesses('deleteOne', action);
-                    return this.service.deleteOne(action.data).pipe(
+                    return this.getService(action.data.constructor.serviceInjection, action.data.getJsonApiType()).deleteOne(action.data).pipe(
                         map(
                             (value) => {
                                 const d = this.executePostprocesses('deleteOne', { model: action.data });
                                 action.data = d.model;
-                                this.executeParameters(action, action.data, true);
+                                this.executeParameters(action, { model: action.data, response: null }, true);
                                 return reducerRemoveOne({payload: action.data})
                             }
                         ),
@@ -358,4 +375,8 @@ export class GlobalEffects {
             )
         )
     );
+
+    /*loadRelationMany$ = createEffect(
+        () => this.actions$.pip
+    );*/
 }

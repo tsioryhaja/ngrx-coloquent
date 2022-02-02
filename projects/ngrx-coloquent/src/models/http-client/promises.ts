@@ -15,13 +15,18 @@ export class AngularHttpClientPromise implements HttpClientPromise {
             undefined;
         return <Promise<U>> this.requestPromise.then(
             wrappedOnFulfilled,
-            onRejected
+            (error) => {
+                error;
+                throw error;
+            }
         );
     }
 
     catch<U>(onRejected?: (error: any) => (Thenable<U>|U)): Promise<U> {
         return <Promise<U>> this.requestPromise.catch(
-            onRejected
+            (error) => {
+                throw error;
+            }
         );
     }
 }

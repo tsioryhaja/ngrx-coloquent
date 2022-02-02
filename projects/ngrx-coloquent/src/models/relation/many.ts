@@ -2,7 +2,7 @@ import { SortDirection, ToManyRelation } from "@herlinus/coloquent";
 import { AngularBuilder } from "../query/builder";
 
 export class AngularToManyRelation extends ToManyRelation {
-    protected createAngularBuilder(isSingular: boolean) {
+    createAngularBuilder(isSingular: boolean) {
         return new AngularBuilder(this.getType(), this.getName(), this.getReferringObject().getJsonApiType(), this.getReferringObject().getApiId(), isSingular);
     }
 

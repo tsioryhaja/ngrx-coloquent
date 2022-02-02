@@ -1,12 +1,17 @@
+import { Attribute } from "@angular/core";
 import { Attribut, toManyRelation, toOneRelation } from "@herlinus/coloquent";
+import { AltEffectService } from "projects/ngrx-coloquent/src/effects/alt.effects.service";
 import { Entities, Model } from "projects/ngrx-coloquent/src/models/models";
+import { NumeroService } from "../services/sda/services";
+import { SoundService } from "../services/sound/services";
+import { SoundEffectService } from "./sound-service";
 
 @Entities.hasReducer()
 export class Identity extends Model {
     protected jsonApiType = 'Identity';
 
     public static getJsonApiBaseUrl(): string {
-        return 'https://localhost:8000';
+        return 'http://localhost:8000/api';
     }
 }
 
@@ -15,7 +20,7 @@ export class Person extends Identity {
     protected jsonApiType = 'Person';
 
     public static getJsonApiBaseUrl(): string {
-        return 'https://localhost:8000';
+        return 'http://localhost:8000/api';
     }
 }
 
@@ -25,7 +30,7 @@ export class Dossier extends Model {
     @Attribut() NomDossier: string;
 
     public static getJsonApiBaseUrl() {
-        return 'https://localhost:8000';
+        return 'http://localhost:8000/api';
     }
 }
 
@@ -36,7 +41,7 @@ export class Collaborator extends Person {
     @toOneRelation(() => Dossier) client;
 
     public static getJsonApiBaseUrl(): string {
-        return 'https://localhost:8000';
+        return 'http://localhost:8000/api';
     }
 }
 
@@ -49,7 +54,7 @@ export class ClientContent extends Model {
     @toOneRelation(() => Person) person;
 
     public static getJsonApiBaseUrl(): string {
-        return 'https://localhost:8000';
+        return 'http://localhost:8000/api';
     }
 }
 
@@ -59,7 +64,7 @@ export class NamedRule extends Model {
     @Attribut() client_id: number | string;
 
     public static getJsonApiBaseUrl(): string {
-        return 'https://localhost:8000';
+        return 'http://localhost:8000/api';
     }
 }
 
@@ -78,7 +83,7 @@ export class StatementClientBinding extends Model {
     @toOneRelation(() => NamedRule) named_rule;
 
     public static getJsonApiBaseUrl(): string {
-        return 'https://localhost:8000';
+        return 'http://localhost:8000/api';
     }
 }
 
@@ -99,17 +104,18 @@ export class InputControl extends Model {
     @toManyRelation(() => ClientContent) client_contents;
 
     public static getJsonApiBaseUrl(): string {
-        return 'https://localhost:8000';
+        return 'http://localhost:8000/api';
     }
+
+    static serviceInjection = AltEffectService;
 }
 
 @Entities.hasReducer()
 export class Sound extends Model {
-    protected jsonApiType = 'sound';
+    protected jsonApiType = 'Sound';
 
-    static customUrls = {
-        getMany: 'sound/'
-    };
+    static serviceInjection = SoundEffectService;
+    static customService = SoundService;
 
     @Attribut() client_id: number;
     @Attribut() name: string;
@@ -121,4 +127,46 @@ export class Sound extends Model {
     public static getJsonApiBaseUrl(): string {
         return 'http://localhost:8000';
     }
+}
+
+@Entities.hasReducer()
+export class Numero extends Model {
+    protected jsonApiType = 'Numero';
+
+    static serviceInjection = SoundEffectService;
+    static customService = NumeroService;
+
+    public static getJsonApiBaseUrl(): string {
+        return 'http://localhost:8000';
+    }
+
+    @Attribut() provider_id: number;
+    @Attribut() phone_number: string;
+    @Attribut() area_code: number;
+    @Attribut() state: string;
+    @Attribut() old_state: string;
+    @Attribut('type') __type: string;
+    @Attribut() distribution: boolean;
+    @Attribut() domiciliation: boolean;
+    @Attribut() domiciliation_date: string;
+    @Attribut() folder_id: number;
+    @Attribut() old_folder_id: number;
+    @Attribut() state_change_date: string;
+    @Attribut() creation_date: string;
+    @Attribut() company_id: number;
+
+    protected static paginationPageNumberParamName: string = 'number';
+
+    protected static paginationPageSizeParamName: string = 'size';
+}
+
+@Entities.hasReducer()
+export class SearchDossier extends Model {
+    protected jsonApiType = 'SearchDossier';
+
+    public static getJsonApiBaseUrl(): string {
+        return 'http://localhost:8000/api';
+    }
+
+    @Attribut() NomDossier: string;
 }

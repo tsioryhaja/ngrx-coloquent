@@ -8,6 +8,7 @@ import { effectsDeleteOne, effectsGetOne, effectsLoadMany, effectsLoadOne, effec
 import { NGRX_COLOQUENT_ENTITY_KEY } from "./config";
 import { Model } from "../models/models";
 import { reducersSetOne } from "./global-reducers.actions";
+import { AngularBuilder } from "../models/query/builder";
 
 
 export interface EffectsStartActionInterface {
@@ -63,8 +64,9 @@ export class GlobalEntityService {
         this.store.dispatch(action(data));
     }
 
-    findOne$(id: number | string, query: Builder, parameter: EntityActionParameters = {}) {
-        let data = {id, query, parameter};
+    findOne$(id: number | string, query: AngularBuilder, parameters: EntityActionParameters = {}) {
+        query = <AngularBuilder> query.rebuildBuilder('getOne').getBuilder();
+        let data = {id, query, parameters};
         const action = this.effectsStartActions.effectsFindOne || DefaultEffectsStartAction.effectsFindOne;
         this.store.dispatch(action(data));
     }
@@ -73,7 +75,8 @@ export class GlobalEntityService {
         let data = {query, parameter};
     }
 
-    loadMany$(query: Builder, page?: number, parameters: EntityActionParameters = {}, includedRelationships: string[] = []) {
+    loadMany$(query: AngularBuilder, page?: number, parameters: EntityActionParameters = {}, includedRelationships: string[] = []) {
+        query = <AngularBuilder> query.rebuildBuilder('getMany').getBuilder();
         let data = {query, page, parameters, variableName: parameters.variableName, with: includedRelationships};
         const action = this.effectsStartActions.effectsLoadMany || DefaultEffectsStartAction.effectsLoadMany;
         this.store.dispatch(action(data));

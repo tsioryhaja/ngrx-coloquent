@@ -86,6 +86,14 @@ export const effectsLoadRelation = createAction(
     props<EffectsLoadRelationProps>()
 );
 
+export interface EffectsLoadRelationManyProps {
+    query: any;
+    model: any;
+    relationName: string;
+    variableName?:string;
+    parameters?: any;
+}
+
 export const effectsExecuteCallback = createAction(
     '[JSONAPI/MODEL] Execute Callback',
     props<{

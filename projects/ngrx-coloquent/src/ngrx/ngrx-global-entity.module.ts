@@ -11,6 +11,7 @@ import { GlobalEntityReducer } from "../reducers/global.reducer";
 import { GlobalEntityService } from "../reducers/global.service";
 import { reducerFirstInit } from "../reducers/global-reducers.actions";
 import { NgrxColoquentBaseError } from "../effects/errors";
+import { AltEffectService } from "../effects/alt.effects.service";
 
 @NgModule({
     declarations: [],
@@ -19,7 +20,7 @@ import { NgrxColoquentBaseError } from "../effects/errors";
       StoreModule.forFeature(NGRX_COLOQUENT_ENTITY_KEY, GlobalEntityReducer),
       EffectsModule.forFeature([GlobalEffects, NgrxColoquentBaseError])
     ],
-    providers: [GlobalEntityService, EffectService],
+    providers: [GlobalEntityService, EffectService, AltEffectService],
     bootstrap: []
 })
 export class NgrxColoquentGlobalModule {
