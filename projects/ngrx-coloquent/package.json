@@ -1,6 +1,6 @@
 {
   "name": "ngrx-coloquent",
-  "version": "1.2.22",
+  "version": "1.2.23",
   "homepage": "https://github.com/tsioryhaja/ngrx-coloquent#readme",
   "repository": {
     "type": "git",
@@ -16,7 +16,6 @@
     "rxjs": "~6.5.4"
   },
   "dependencies": {
-    "tslib": "^1.10.0",
-    "@herlinus/coloquent": "^2.4.11"
+    "tslib": "^1.10.0"
   }
 }

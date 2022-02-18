@@ -1,5 +1,5 @@
 import { HttpClientPromise, HttpClientResponse } from '@herlinus/coloquent';
-import { Thenable } from '@herlinus/coloquent/dist/httpclient/Types';
+import { Thenable } from '@herlinus/coloquent';
 import { Observable } from 'rxjs';
 
 export class ColoquentHttpClientPromise implements HttpClientPromise {

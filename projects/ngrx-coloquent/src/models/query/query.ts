@@ -1,5 +1,5 @@
-import { Query } from "@herlinus/coloquent/dist/Query";
-import { QueryParam } from "@herlinus/coloquent/dist/QueryParam";
+import { Query } from "@herlinus/coloquent";
+import { QueryParam } from "@herlinus/coloquent";
 
 export class AngularQuery extends Query {
     customUrl: string;
