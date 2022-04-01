@@ -94,9 +94,10 @@ export class GlobalEntityService {
         this.store.dispatch(action(data));
     }
 
-    saveOne$(model: Model, parameters: EntityActionParameters = {}) {
-        let data = {data: model, parameters};
+    saveOne$(model: Model, parameters: EntityActionParameters = {}, forceCreate=false) {
+        let data = {data: model, parameters, forceCreate};
         const action = this.effectsStartActions.effectsSave || DefaultEffectsStartAction.effectsSave;
+        console.log(action(data));
         this.store.dispatch(action(data));
     }
 

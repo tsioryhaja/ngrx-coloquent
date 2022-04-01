@@ -1,5 +1,5 @@
 import { HttpClient, HttpClientModule } from "@angular/common/http";
-import { NgModule } from "@angular/core";
+import { Inject, NgModule } from "@angular/core";
 import { EffectsModule } from "@ngrx/effects";
 import { Store, StoreModule } from "@ngrx/store";
 import { AngularHttpClient } from "../models/http-client/class";
@@ -24,6 +24,7 @@ import { AltEffectService } from "../effects/alt.effects.service";
     bootstrap: []
 })
 export class NgrxColoquentGlobalModule {
+  //constructor(@Inject(HttpClient) httpClient: HttpClient, @Inject(Store) store: Store, @Inject(GlobalEntityService) service: GlobalEntityService) {
   constructor(httpClient: HttpClient, store: Store, service: GlobalEntityService) {
     Model.ngrxColoquentService = service;
     const angularHttpClient = new AngularHttpClient(httpClient);

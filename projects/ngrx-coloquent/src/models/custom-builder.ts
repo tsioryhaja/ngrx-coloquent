@@ -1,6 +1,6 @@
 import { Builder, PluralResponse, SingularResponse, SortDirection } from "@herlinus/coloquent";
-import { FilterSpec } from "@herlinus/coloquent/dist/FilterSpec";
-import { Query } from "@herlinus/coloquent/dist/Query";
+import { FilterSpec } from "@herlinus/coloquent";
+import { Query } from "@herlinus/coloquent";
 import { Model } from "./models";
 
 export class CustomBuilder extends Builder {

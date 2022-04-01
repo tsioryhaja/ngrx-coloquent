@@ -1,5 +1,5 @@
 import { HttpClient, Model as Model_, PaginationStrategy, PluralResponse, SaveResponse, SingularResponse, ToManyRelation, ToOneRelation } from '@herlinus/coloquent';
-import { PolymorphicEntry, PolymorphicMapping } from '@herlinus/coloquent/dist/PolymorphicModel';
+import { PolymorphicEntry, PolymorphicMapping } from '@herlinus/coloquent';
 import { Builder } from '@herlinus/coloquent';
 import { EntityActionParameters } from '../ngrx/base.entity.class';
 import { AngularHttpClient } from './http-client/class';
@@ -7,7 +7,7 @@ import { NoServiceException } from './exceptions';
 import { Observable } from 'rxjs';
 import { QueryBuilder, StartPromise } from './query-builder';
 import { AngularBuilder } from './query/builder';
-import { Reflection } from '@herlinus/coloquent/dist/util/Reflection';
+import { Reflection } from '@herlinus/coloquent';
 import { AngularToManyRelation } from './relation/many';
 import { AngularToOneRelation } from './relation/one';
 import { InjectionToken, Type } from '@angular/core';
@@ -213,9 +213,9 @@ export abstract class Model extends Model_ {
         Model.ngrxColoquentService.loadRelation$(this, relationName, parameters);
     }
 
-    _save(parameters: EntityActionParameters = {}) {
+    _save(parameters: EntityActionParameters = {}, forceCreate=false) {
         if (!Model.ngrxColoquentService) throw new NoServiceException(NO_SERVICE_ERROR_MESSAGE);
-        Model.ngrxColoquentService.saveOne$(this, parameters);
+        Model.ngrxColoquentService.saveOne$(this, parameters, forceCreate);
     }
 
     _delete(parameters: EntityActionParameters = {}) {
@@ -244,10 +244,10 @@ export abstract class Model extends Model_ {
         });
     }
 
-    save$() {
+    save$(forceCreate: boolean=false) {
         const that = this;
         return new StartPromise((parameters: EntityActionParameters) => {
-            that._save(parameters);
+            that._save(parameters, forceCreate);
         });
     }
 
@@ -418,8 +418,8 @@ export abstract class Model extends Model_ {
         return new AngularToOneRelation(relatedType, this, relationName);
     }
 
-    __save() {
-        if (!this.getApiId() || this.getApiId() === '') {
+    __save(forceCreate: boolean = false) {
+        if (!this.getApiId() || this.getApiId() === '' || forceCreate) {
             return this.create();
         }
 
@@ -492,11 +492,11 @@ export abstract class Model extends Model_ {
             .then(function () {});
     }
 
-    save(): Promise<any> {
+    save(forceCreate: boolean=false): Promise<any> {
         const that = this;
         return new Promise(
             (resolve, reject) => {
-                that.save$().onSuccess(
+                that.save$(forceCreate).onSuccess(
                     (a, r) => {
                         resolve(this);
                     }

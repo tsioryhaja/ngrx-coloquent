@@ -93,14 +93,15 @@ export class EffectService implements BaseGlobalEffectService {
         );
     }
 
-    saveOne (data: Model) {
+    saveOne (data: Model, forceCreate: boolean=false) {
         return new Observable(
             (observer) => {
                 if (!data.isDirty()) {
                     observer.next(data);
                     observer.complete();
                 }
-                data.__save().then(
+								
+                data.__save(forceCreate).then(
                     (value) => {
                         const result = value.getModel();
                         const response = value.getHttpClientResponse();

@@ -67,6 +67,7 @@ export const effectsFirst = createAction(
 export interface EffectsSaveProps {
     data: any;
     parameters?: any;
+	forceCreate?: boolean;
 }
 
 export const effectsSave = createAction(

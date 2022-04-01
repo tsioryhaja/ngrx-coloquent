@@ -8,7 +8,7 @@ export interface BaseGlobalEffectService {
 
     findOne(query: any, id: any): Observable<any>;
 
-    saveOne (data: Model): Observable<any>;
+    saveOne (data: Model, forceCreate: boolean): Observable<any>;
 
     loadRelation(data: Model, relationName: string): Observable<any>;
 

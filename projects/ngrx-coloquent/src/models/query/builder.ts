@@ -1,5 +1,5 @@
 import { Builder } from "@herlinus/coloquent";
-import { Query } from "@herlinus/coloquent/dist/Query";
+import { Query } from "@herlinus/coloquent";
 import { QueryBuilder } from "../query-builder";
 import { AngularQuery } from "./query";
 
