@@ -14,7 +14,6 @@ import { notifyErrorAction } from "./errors";
 import { effectsDeleteOne, EffectsDeleteOneProps, effectsExecuteCallback, effectsGetOne, effectsFindOne, EffectsGetOneProps, effectsLoadMany, EffectsLoadManyProps, effectsLoadOne, EffectsLoadOneProps, effectsLoadRelation, EffectsLoadRelationProps, effectsSave, EffectsSaveProps } from "./global-effects.actions";
 import { getObjectReducer } from "../reducers/global.reducer";
 import { Model } from "../models/models";
-import { AltEffectService } from "./alt.effects.service";
 import { BaseGlobalEffectService, ServicesInterface } from "./effect.service.interface";
 
 export interface NgrxColoquentGlobalEffectsPostprocessesInterface {
